@@ -1,0 +1,6 @@
+{
+  "/master/guru/page": "app/master/guru/page.js",
+  "/master/kelas/page": "app/master/kelas/page.js",
+  "/master/mata-pelajaran/page": "app/master/mata-pelajaran/page.js",
+  "/page": "app/page.js"
+}
