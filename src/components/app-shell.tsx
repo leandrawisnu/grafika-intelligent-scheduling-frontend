@@ -1,283 +1,110 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { Fragment } from "react";
+import { usePathname } from "next/navigation";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SEMESTER_LABEL } from "@/lib/prototype-types";
 import {
-  LayoutDashboard,
-  Users,
-  BookOpen,
-  Building2,
-  GraduationCap,
-  DoorOpen,
-  Clock,
-  Calendar,
-  ClipboardList,
-  Search,
-  AlertTriangle,
-  WandSparkles,
-  RotateCcw,
-  type LucideIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { usePrototype } from "@/lib/prototype-store";
-import type { Role } from "@/lib/prototype-types";
-import { JADWAL_ID, SEMESTER_LABEL } from "@/lib/prototype-types";
-import { AiBadge } from "@/components/ai-badge";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar";
 
-const masterItems = [
-  { href: "/master/guru", label: "Guru", icon: Users },
-  { href: "/master/mata-pelajaran", label: "Mata Pelajaran", icon: BookOpen },
-  { href: "/master/jurusan", label: "Jurusan", icon: Building2 },
-  { href: "/master/kelas", label: "Kelas", icon: GraduationCap },
-  { href: "/master/ruangan", label: "Ruangan", icon: DoorOpen },
-  { href: "/master/jam-pelajaran", label: "Jam Pelajaran", icon: Clock },
-  { href: "/master/tahun-ajaran", label: "Tahun Ajaran", icon: Calendar },
-];
+const SEGMENT_LABELS: Record<string, string> = {
+  master: "Data Master",
+  jadwal: "Jadwal",
+  ai: "AI",
+  guru: "Guru",
+  siswa: "Siswa",
+  kelas: "Kelas",
+  jurusan: "Jurusan",
+  ruangan: "Ruangan",
+  "tahun-ajaran": "Tahun Ajaran",
+  "mata-pelajaran": "Mata Pelajaran",
+  "jam-pelajaran": "Jam Pelajaran",
+  konflik: "Prediksi Konflik",
+  selesaikan: "Selesaikan",
+  tanya: "Tanya AI",
+};
 
-const kurikulumNav = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jadwal", label: "Jadwal", icon: ClipboardList },
-];
-
-const aiNav = [
-  { href: "/ai/konflik", label: "Prediksi Konflik", icon: AlertTriangle },
-  { href: "/ai/selesaikan", label: "Selesaikan", icon: WandSparkles },
-  { href: "/ai/tanya", label: "Tanya AI", icon: Search },
-];
-
-const guruNav = [{ href: "/guru/jadwal", label: "Jadwal Mengajar", icon: ClipboardList }];
-const siswaNav = [{ href: "/siswa/jadwal", label: "Jadwal Pelajaran", icon: ClipboardList }];
-
-const roles: { id: Role; label: string }[] = [
-  { id: "kurikulum", label: "Kurikulum" },
-  { id: "guru", label: "Guru" },
-  { id: "siswa", label: "Siswa" },
-];
-
-function isActivePath(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+function labelForSegment(segment: string) {
+  return SEGMENT_LABELS[segment] ?? segment.replace(/-/g, " ");
 }
 
-function NavItem({
-  href,
-  label,
-  icon: Icon,
-  badge,
-}: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  badge?: number;
-}) {
+function AppBreadcrumb() {
   const pathname = usePathname();
-  const active = isActivePath(pathname, href);
+  if (pathname === "/") {
+    return (
+      <Breadcrumb className="min-w-0">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage>Dashboard</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
+
+  const parts = pathname.split("/").filter(Boolean);
+  const crumbs = parts.map((part, index) => {
+    const href = `/${parts.slice(0, index + 1).join("/")}`;
+    const label = labelForSegment(part);
+    const isLast = index === parts.length - 1;
+    return { href, label, isLast };
+  });
 
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton render={<Link href={href} />} isActive={active} tooltip={label}>
-        <Icon />
-        <span>{label}</span>
-      </SidebarMenuButton>
-      {badge != null && badge > 0 ? (
-        <SidebarMenuBadge className="text-ai tabular-nums">{badge}</SidebarMenuBadge>
-      ) : null}
-    </SidebarMenuItem>
-  );
-}
-
-function CloseMobileOnNavigate() {
-  const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
-
-  useEffect(() => {
-    if (isMobile) setOpenMobile(false);
-  }, [pathname, isMobile, setOpenMobile]);
-
-  return null;
-}
-
-function AppSidebar() {
-  const router = useRouter();
-  const { role, openConflicts, resetDemo, predicted } = usePrototype();
-  const conflictCount = predicted ? openConflicts.length : 0;
-
-  return (
-    <Sidebar variant="inset" collapsible="icon">
-      <CloseMobileOnNavigate />
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/" />} tooltip="GIS">
-              <span className="flex aspect-square size-8 items-center justify-center">
-                <img
-                  src="/Icons/GIS%20-%20Icon%20Light.svg"
-                  alt=""
-                  className="size-7"
-                />
-              </span>
-              <span className="min-w-0 leading-tight">
-                <span className="block truncate text-sm font-bold tracking-tight">GIS</span>
-                <span className="block truncate text-[11px] text-muted-foreground">
-                  Grafika Intelligent Scheduling
-                </span>
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Kurikulum</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {kurikulumNav.map((item) => (
-                <NavItem key={item.href} {...item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Data Master</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {masterItems.map((item) => (
-                <NavItem key={item.href} {...item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-ai">
-            <span>AI</span>
-            {conflictCount > 0 ? (
-              <span className="ml-auto rounded-full bg-ai px-1.5 py-px text-[10px] font-medium text-ai-foreground tabular-nums">
-                {conflictCount}
-              </span>
-            ) : (
-              <AiBadge className="ml-auto h-4 px-1.5 text-[9px]">AI</AiBadge>
-            )}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {aiNav.map((item) => (
-                <NavItem
-                  key={item.href}
-                  {...item}
-                  badge={item.href === "/ai/konflik" ? conflictCount : undefined}
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Peran lain</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {guruNav.map((item) => (
-                <NavItem key={item.href} {...item} />
-              ))}
-              {siswaNav.map((item) => (
-                <NavItem key={item.href} {...item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/style-guide" />} tooltip="Style guide">
-              <LayoutDashboard />
-              <span>Style guide</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Reset demo"
-              onClick={() => {
-                resetDemo();
-                router.push("/");
-              }}
-            >
-              <RotateCcw />
-              <span>Reset demo</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <p className="px-2 pb-1 text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
-          Data dummy · {JADWAL_ID}
-        </p>
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+    <Breadcrumb className="min-w-0">
+      <BreadcrumbList>
+        <BreadcrumbItem className="hidden sm:inline-flex">
+          <BreadcrumbLink render={<Link href="/" />}>Beranda</BreadcrumbLink>
+        </BreadcrumbItem>
+        {crumbs.map((crumb) => (
+          <Fragment key={crumb.href}>
+            <BreadcrumbSeparator className="hidden sm:inline-flex" />
+            <BreadcrumbItem>
+              {crumb.isLast ? (
+                <BreadcrumbPage className="capitalize">{crumb.label}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink render={<Link href={crumb.href} />} className="capitalize">
+                  {crumb.label}
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+          </Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { role, setRole } = usePrototype();
 
   if (pathname === "/style-guide") {
     return <>{children}</>;
   }
-
-  const switchRole = (next: Role) => {
-    setRole(next);
-  };
 
   return (
     <TooltipProvider>
       <SidebarProvider className="h-full min-h-0">
         <AppSidebar />
         <SidebarInset className="min-h-0 overflow-hidden">
-          <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3 md:px-4">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-4" />
-            <p className="min-w-0 truncate text-sm font-medium">{SEMESTER_LABEL}</p>
-            <div className="ml-auto grid shrink-0 grid-cols-3 gap-1 rounded-lg bg-muted p-1">
-              {roles.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => switchRole(item.id)}
-                  className={cn(
-                    "rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors",
-                    role === item.id
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {item.label}
-                </button>
-              ))}
+          <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/80 md:px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-1 hidden h-4 sm:block" />
+            <div className="min-w-0 flex-1">
+              <AppBreadcrumb />
+              <p className="truncate text-xs text-muted-foreground sm:hidden">{SEMESTER_LABEL}</p>
             </div>
+            <p className="hidden shrink-0 text-xs text-muted-foreground md:block">{SEMESTER_LABEL}</p>
           </header>
           <div className="flex-1 overflow-auto p-4 md:p-6">{children}</div>
         </SidebarInset>
