@@ -35,15 +35,23 @@ interface CRUDPageProps {
 export function CRUDPage({ title, description, fields, fetchData, onCreate, onUpdate, onDelete, getInitialData }: CRUDPageProps) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<any>({});
 
   const load = async () => {
     setLoading(true);
-    const result = await fetchData();
-    setData(result);
-    setLoading(false);
+    setLoadError(null);
+    try {
+      const result = await fetchData();
+      setData(Array.isArray(result) ? result : []);
+    } catch (err) {
+      setData([]);
+      setLoadError(err instanceof Error ? err.message : "Gagal memuat data");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -54,20 +62,45 @@ export function CRUDPage({ title, description, fields, fetchData, onCreate, onUp
     setDialogOpen(true);
   };
 
+  const formFromRow = (row: Record<string, unknown>) => {
+    const next: Record<string, unknown> = {};
+    for (const field of fields) {
+      if (row[field.key] !== undefined && row[field.key] !== null) {
+        next[field.key] = row[field.key];
+      }
+    }
+    return next;
+  };
+
+  const payloadFromForm = () => {
+    const next = formFromRow(form);
+    for (const field of fields) {
+      if (field.type === "number" && next[field.key] !== undefined) {
+        next[field.key] = Number(next[field.key]);
+      }
+    }
+    return next;
+  };
+
   const openEdit = (row: any) => {
     setEditingId(row.id);
-    setForm({ ...row });
+    setForm(formFromRow(row));
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (editingId) {
-      await onUpdate(editingId, form);
-    } else {
-      await onCreate(form);
+    try {
+      const payload = payloadFromForm();
+      if (editingId) {
+        await onUpdate(editingId, payload);
+      } else {
+        await onCreate(payload);
+      }
+      setDialogOpen(false);
+      load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal menyimpan");
     }
-    setDialogOpen(false);
-    load();
   };
 
   const handleDelete = async (row: any) => {
@@ -93,12 +126,27 @@ export function CRUDPage({ title, description, fields, fetchData, onCreate, onUp
         <Button onClick={openAdd}>Tambah</Button>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={data}
-        onEdit={openEdit}
-        onDelete={handleDelete}
-      />
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Memuat data…</p>
+      ) : loadError ? (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+          <p className="font-medium text-destructive">Tidak bisa memuat dari API</p>
+          <p className="mt-1 text-muted-foreground">{loadError}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Pastikan backend jalan ({process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}).
+          </p>
+          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={load}>
+            Coba lagi
+          </Button>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={data}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

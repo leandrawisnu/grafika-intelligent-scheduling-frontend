@@ -35,7 +35,6 @@ export interface Guru {
   nama: string;
   jam_maksimal_per_hari: number;
   hari_libur_ids: string[];
-  mapel_ids: string[];
   aktif: boolean;
 }
 

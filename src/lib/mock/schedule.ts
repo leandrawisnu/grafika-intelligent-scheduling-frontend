@@ -153,7 +153,7 @@ export const INITIAL_CONFLICTS: PrototypeConflict[] = [
           },
         ],
         explanation:
-          "Perubahan paling kecil: satu plotting guru. Lina memenuhi kualifikasi Animasi 2D dan tidak bentrok di jam itu.",
+          "Perubahan paling kecil: satu plotting guru. Lina ditugaskan ke Animasi 2D dan tidak bentrok di jam itu.",
         reasoningSteps: [
           "Guru tersedia pada jam tersebut.",
           "Tidak menimbulkan konflik baru.",
@@ -317,7 +317,7 @@ export const INITIAL_CONFLICTS: PrototypeConflict[] = [
         rank: 1,
         label: "A",
         confidence: 0.88,
-        summary: "Jam ke-8 Selasa dialihkan ke Dedi Pratama (kualifikasi Produksi Cetak).",
+        summary: "Jam ke-8 Selasa dialihkan ke Dedi Pratama untuk Produksi Cetak.",
         changes: [
           {
             slotId: "s-xipg1-sel-8",

@@ -55,7 +55,6 @@ export const GURU: Guru[] = [
     nama: "Ahmad Fauzi",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-desgraf", "m-tipografi"],
     aktif: true,
   },
   {
@@ -64,7 +63,6 @@ export const GURU: Guru[] = [
     nama: "Sari Wulandari",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-prod-cetak"],
     aktif: true,
   },
   {
@@ -73,7 +71,6 @@ export const GURU: Guru[] = [
     nama: "Budi Santoso",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: ["h-rab"],
-    mapel_ids: ["m-pkk"],
     aktif: true,
   },
   {
@@ -82,7 +79,6 @@ export const GURU: Guru[] = [
     nama: "Rina Kusuma",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-desgraf", "m-ilustrasi"],
     aktif: true,
   },
   {
@@ -91,7 +87,6 @@ export const GURU: Guru[] = [
     nama: "Dedi Pratama",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-prod-digital", "m-prod-cetak"],
     aktif: true,
   },
   {
@@ -100,7 +95,6 @@ export const GURU: Guru[] = [
     nama: "Lina Marlina",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-animasi", "m-editing"],
     aktif: true,
   },
   {
@@ -109,7 +103,6 @@ export const GURU: Guru[] = [
     nama: "Eko Nugroho",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-mat"],
     aktif: true,
   },
   {
@@ -118,7 +111,6 @@ export const GURU: Guru[] = [
     nama: "Fitri Handayani",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-bind"],
     aktif: true,
   },
   {
@@ -127,7 +119,6 @@ export const GURU: Guru[] = [
     nama: "Agus Rahman",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-pjok"],
     aktif: true,
   },
   {
@@ -136,7 +127,6 @@ export const GURU: Guru[] = [
     nama: "Maya Putri",
     jam_maksimal_per_hari: 6,
     hari_libur_ids: [],
-    mapel_ids: ["m-agama"],
     aktif: true,
   },
 ];

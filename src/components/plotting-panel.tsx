@@ -27,11 +27,11 @@ export function PlottingPanel() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        {unplotted.length} slot belum diplot. Pilih guru yang kualifikasinya cocok dan tidak bentrok di jam yang sama.
+        {unplotted.length} slot belum diplot. Pilih guru yang tidak bentrok di jam yang sama.
       </p>
       <ul className="space-y-3">
         {unplotted.map((slot) => {
-          const candidates = GURU.filter((g) => g.mapel_ids.includes(slot.mata_pelajaran_id));
+          const candidates = GURU.filter((g) => g.aktif);
           return (
             <li key={slot.id} className="rounded-xl p-4 ring-1 ring-foreground/10">
               <p className="text-sm font-medium">
@@ -42,7 +42,7 @@ export function PlottingPanel() {
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {candidates.length === 0 ? (
-                  <p className="text-xs text-destructive">Tidak ada guru berkualifikasi.</p>
+                  <p className="text-xs text-destructive">Tidak ada guru aktif.</p>
                 ) : (
                   candidates.map((guru) => {
                     const busy = teacherBusy(guru.id, slot.hari_id, slot.jam_pelajaran_id, slot.id);

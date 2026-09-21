@@ -28,12 +28,32 @@ export default function Dashboard() {
     setSelectedConflictId,
   } = store;
 
-  useEffect(() => {
-    if (role === "guru") router.replace("/guru/jadwal");
-    if (role === "siswa") router.replace("/siswa/jadwal");
-  }, [role, router]);
-
-  if (role !== "kurikulum") return null;
+  if (role === "guru") {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Dashboard kurikulum. Untuk jadwal mengajar, buka{" "}
+          <Link href="/guru/jadwal" className="font-medium text-primary underline-offset-4 hover:underline">
+            Jadwal Mengajar
+          </Link>
+          .
+        </p>
+      </div>
+    );
+  }
+  if (role === "siswa") {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Dashboard kurikulum. Untuk jadwal pelajaran, buka{" "}
+          <Link href="/siswa/jadwal" className="font-medium text-primary underline-offset-4 hover:underline">
+            Jadwal Pelajaran
+          </Link>
+          .
+        </p>
+      </div>
+    );
+  }
 
   const insightTitle = published
     ? "Jadwal Ganjil 2026/2027 sudah dipublikasikan"

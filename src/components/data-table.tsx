@@ -58,7 +58,11 @@ export function DataTable({ columns, data, onAdd, onEdit, onDelete }: DataTableP
                 <TableRow key={row.id || i}>
                   {columns.map((col) => (
                     <TableCell key={col.key}>
-                      {col.render ? col.render(row[col.key], row) : row[col.key] ?? "—"}
+                      {col.render
+                        ? col.render(row[col.key], row)
+                        : row[col.key] != null && typeof row[col.key] === "object"
+                          ? "—"
+                          : (row[col.key] ?? "—")}
                     </TableCell>
                   ))}
                   {(onEdit || onDelete) && (

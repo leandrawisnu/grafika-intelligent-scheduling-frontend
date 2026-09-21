@@ -148,78 +148,75 @@ function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {role === "kurikulum" ? (
-          <>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {kurikulumNav.map((item) => (
-                    <NavItem key={item.href} {...item} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Kurikulum</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {kurikulumNav.map((item) => (
+                <NavItem key={item.href} {...item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-            <SidebarGroup>
-              <SidebarGroupLabel>Data Master</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {masterItems.map((item) => (
-                    <NavItem key={item.href} {...item} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Data Master</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {masterItems.map((item) => (
+                <NavItem key={item.href} {...item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-ai">
-                <span>AI</span>
-                {conflictCount > 0 ? (
-                  <span className="ml-auto rounded-full bg-ai px-1.5 py-px text-[10px] font-medium text-ai-foreground tabular-nums">
-                    {conflictCount}
-                  </span>
-                ) : (
-                  <AiBadge className="ml-auto h-4 px-1.5 text-[9px]">AI</AiBadge>
-                )}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {aiNav.map((item) => (
-                    <NavItem
-                      key={item.href}
-                      {...item}
-                      badge={item.href === "/ai/konflik" ? conflictCount : undefined}
-                    />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        ) : role === "guru" ? (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {guruNav.map((item) => (
-                  <NavItem key={item.href} {...item} />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {siswaNav.map((item) => (
-                  <NavItem key={item.href} {...item} />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-ai">
+            <span>AI</span>
+            {conflictCount > 0 ? (
+              <span className="ml-auto rounded-full bg-ai px-1.5 py-px text-[10px] font-medium text-ai-foreground tabular-nums">
+                {conflictCount}
+              </span>
+            ) : (
+              <AiBadge className="ml-auto h-4 px-1.5 text-[9px]">AI</AiBadge>
+            )}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {aiNav.map((item) => (
+                <NavItem
+                  key={item.href}
+                  {...item}
+                  badge={item.href === "/ai/konflik" ? conflictCount : undefined}
+                />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Peran lain</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {guruNav.map((item) => (
+                <NavItem key={item.href} {...item} />
+              ))}
+              {siswaNav.map((item) => (
+                <NavItem key={item.href} {...item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton render={<Link href="/style-guide" />} tooltip="Style guide">
+              <LayoutDashboard />
+              <span>Style guide</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Reset demo"
@@ -253,9 +250,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const switchRole = (next: Role) => {
     setRole(next);
-    if (next === "guru") router.push("/guru/jadwal");
-    else if (next === "siswa") router.push("/siswa/jadwal");
-    else router.push("/");
   };
 
   return (
