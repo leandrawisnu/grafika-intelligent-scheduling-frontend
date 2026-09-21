@@ -11,6 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "./data-table";
 
 interface Field {
@@ -127,18 +136,25 @@ export function CRUDPage({ title, description, fields, fetchData, onCreate, onUp
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Memuat data…</p>
-      ) : loadError ? (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
-          <p className="font-medium text-destructive">Tidak bisa memuat dari API</p>
-          <p className="mt-1 text-muted-foreground">{loadError}</p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Pastikan backend jalan ({process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}).
-          </p>
-          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={load}>
-            Coba lagi
-          </Button>
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-48 w-full" />
         </div>
+      ) : loadError ? (
+        <Card className="border-destructive/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-destructive">Tidak bisa memuat dari API</CardTitle>
+            <CardDescription>{loadError}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Pastikan backend jalan ({process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}).
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={load}>
+              Coba lagi
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <DataTable
           columns={columns}
@@ -156,19 +172,23 @@ export function CRUDPage({ title, description, fields, fetchData, onCreate, onUp
           <div className="space-y-4">
             {fields.map((field) => {
               if (field.type === "select") {
+                const value = String(form[field.key] ?? "");
                 return (
-                  <div key={field.key}>
+                  <div key={field.key} className="space-y-2">
                     <Label>{field.label}</Label>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={form[field.key] ?? ""}
-                      onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                    <Select
+                      value={value || null}
+                      onValueChange={(next) => setForm({ ...form, [field.key]: next ?? "" })}
                     >
-                      <option value="">Pilih {field.label}</option>
-                      {field.options?.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={`Pilih ${field.label}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options?.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 );
               }

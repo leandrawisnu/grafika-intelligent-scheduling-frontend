@@ -17,6 +17,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+async function requestList<T>(path: string, options?: RequestInit): Promise<T[]> {
+  const data = await request<T[] | null>(path, options);
+  return Array.isArray(data) ? data : [];
+}
+
 export const api = {
   // Data Master
   getTahunAjaran: () => request<TahunAjaran[]>("/tahun-ajaran"),
@@ -24,10 +29,11 @@ export const api = {
   updateTahunAjaran: (id: string, d: Partial<TahunAjaran>) => request<TahunAjaran>(`/tahun-ajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteTahunAjaran: (id: string) => request<{status: string}>(`/tahun-ajaran/${id}`, { method: "DELETE" }),
 
-  getSemester: (tahunAjaranId?: string) => request<Semester[]>(`/semester${tahunAjaranId ? `?tahun_ajaran_id=${tahunAjaranId}` : ""}`),
+  getSemester: (tahunAjaranId?: string) =>
+    requestList<Semester>(`/semester${tahunAjaranId ? `?tahun_ajaran_id=${tahunAjaranId}` : ""}`),
   createSemester: (d: Partial<Semester>) => request<Semester>("/semester", { method: "POST", body: JSON.stringify(d) }),
 
-  getJurusan: () => request<Jurusan[]>("/jurusan"),
+  getJurusan: () => requestList<Jurusan>("/jurusan"),
   createJurusan: (d: Partial<Jurusan>) => request<Jurusan>("/jurusan", { method: "POST", body: JSON.stringify(d) }),
   updateJurusan: (id: string, d: Partial<Jurusan>) => request<Jurusan>(`/jurusan/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteJurusan: (id: string) => request<{status: string}>(`/jurusan/${id}`, { method: "DELETE" }),
@@ -42,7 +48,8 @@ export const api = {
   updateMataPelajaran: (id: string, d: Partial<MataPelajaran>) => request<MataPelajaran>(`/mata-pelajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteMataPelajaran: (id: string) => request<{status: string}>(`/mata-pelajaran/${id}`, { method: "DELETE" }),
 
-  getKelas: (semesterId?: string) => request<Kelas[]>(`/kelas${semesterId ? `?semester_id=${semesterId}` : ""}`),
+  getKelas: (semesterId?: string) =>
+    requestList<Kelas>(`/kelas${semesterId ? `?semester_id=${semesterId}` : ""}`),
   createKelas: (d: Partial<Kelas>) => request<Kelas>("/kelas", { method: "POST", body: JSON.stringify(d) }),
   updateKelas: (id: string, d: Partial<Kelas>) => request<Kelas>(`/kelas/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteKelas: (id: string) => request<{status: string}>(`/kelas/${id}`, { method: "DELETE" }),
