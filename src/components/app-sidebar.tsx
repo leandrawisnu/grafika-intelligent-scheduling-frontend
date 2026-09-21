@@ -19,8 +19,10 @@ import {
   RotateCcw,
   Palette,
   ChevronsUpDown,
+  Check,
   type LucideIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { usePrototype } from "@/lib/prototype-store";
 import type { Role } from "@/lib/prototype-types";
 import { JADWAL_ID } from "@/lib/prototype-types";
@@ -29,10 +31,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -122,14 +123,11 @@ function SidebarAccount() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
-              />
-            }
+        <DropdownMenu modal={false}>
+          <SidebarMenuButton
+            size="lg"
+            className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+            render={<DropdownMenuTrigger />}
           >
             <Avatar className="size-8 rounded-lg">
               <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
@@ -143,40 +141,41 @@ function SidebarAccount() {
               </span>
             </div>
             <ChevronsUpDown className="ml-auto size-4 shrink-0 opacity-60" />
-          </DropdownMenuTrigger>
+          </SidebarMenuButton>
           <DropdownMenuContent
             className="min-w-56 rounded-lg"
             side="top"
             align="start"
             sideOffset={8}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-2 py-2 text-left text-sm">
-                <Avatar className="size-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
-                    AD
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 leading-tight">
-                  <span className="truncate font-semibold">Akun demo</span>
-                  <span className="truncate text-xs text-muted-foreground">Data prototype</span>
-                </div>
+            <div className="flex items-center gap-2 px-2 py-2 text-left text-sm">
+              <Avatar className="size-8 rounded-lg">
+                <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
+                  AD
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid min-w-0 flex-1 leading-tight">
+                <span className="truncate font-semibold">Akun demo</span>
+                <span className="truncate text-xs text-muted-foreground">Data prototype</span>
               </div>
-            </DropdownMenuLabel>
+            </div>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>Peran demo</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={role}
-              onValueChange={(value) => value && setRole(value as Role)}
-            >
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Peran demo</DropdownMenuLabel>
               {roles.map((item) => (
-                <DropdownMenuRadioItem key={item.id} value={item.id}>
+                <DropdownMenuItem
+                  key={item.id}
+                  onClick={() => setRole(item.id)}
+                >
+                  <Check
+                    className={cn("size-4", role !== item.id && "opacity-0")}
+                  />
                   {item.label}
-                </DropdownMenuRadioItem>
+                </DropdownMenuItem>
               ))}
-            </DropdownMenuRadioGroup>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/style-guide" />}>
+            <DropdownMenuItem onClick={() => router.push("/style-guide")}>
               <Palette className="size-4" />
               Style guide
             </DropdownMenuItem>
