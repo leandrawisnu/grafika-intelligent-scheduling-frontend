@@ -60,8 +60,6 @@ export const api = {
 
   getHariLiburGuru: (guruId: string) => request<any[]>(`/guru/${guruId}/hari-libur`),
   createHariLiburGuru: (guruId: string, d: any) => request<any>(`/guru/${guruId}/hari-libur`, { method: "POST", body: JSON.stringify(d) }),
-  getKualifikasiGuru: (guruId: string) => request<any[]>(`/guru/${guruId}/kualifikasi`),
-  createKualifikasiGuru: (guruId: string, d: any) => request<any>(`/guru/${guruId}/kualifikasi`, { method: "POST", body: JSON.stringify(d) }),
 
   // === JADWAL SEMESTER ===
   createJadwalSemester: (d: { semester_id: string }) => request<JadwalSemester>("/jadwal-semester", { method: "POST", body: JSON.stringify(d) }),
