@@ -9,9 +9,19 @@ export default function TahunAjaranPage() {
       title="Tahun Ajaran"
       description="Kelola data tahun ajaran"
       fields={[
-        { key: "nama", label: "Nama (contoh: 2025/2026)" },
-        { key: "tanggal_mulai", label: "Tanggal Mulai" },
-        { key: "tanggal_selesai", label: "Tanggal Selesai" },
+        { key: "nama", label: "Nama", required: true, placeholder: "2025/2026" },
+        {
+          key: "tanggal_mulai",
+          label: "Tanggal mulai",
+          type: "date",
+          required: true,
+        },
+        {
+          key: "tanggal_selesai",
+          label: "Tanggal selesai",
+          type: "date",
+          required: true,
+        },
       ]}
       fetchData={api.getTahunAjaran}
       onCreate={(d) => api.createTahunAjaran(d)}
