@@ -1,49 +1,66 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { GURU, KELAS } from "@/lib/mock";
 import { ScheduleGrid } from "@/components/schedule-grid";
+import { useCatalog } from "@/lib/catalog-context";
+import { useJadwal } from "@/lib/jadwal-context";
 import { usePrototype } from "@/lib/prototype-store";
 import { cn } from "@/lib/utils";
 
 export default function GuruJadwalPage() {
   const router = useRouter();
-  const { viewGuruId, setViewGuruId, published, setRole } = usePrototype();
-  const guru = GURU.find((g) => g.id === viewGuruId) ?? GURU[0];
+  const catalog = useCatalog();
+  const { published, slots, activeJadwalId } = useJadwal();
+  const { viewGuruId, setViewGuruId, setRole } = usePrototype();
+
+  useEffect(() => {
+    if (!viewGuruId && catalog.guru[0]) setViewGuruId(catalog.guru[0].id);
+  }, [catalog.guru, viewGuruId, setViewGuruId]);
+
+  const guru = catalog.guru.find((g) => g.id === viewGuruId) ?? catalog.guru[0];
+  const displaySlots = published ? slots : [];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Jadwal mengajar</h1>
+        <h1 className="gis-page-title">Jadwal mengajar</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {published
-            ? "Versi terbit. Perubahan kurikulum sudah masuk ke grid ini."
-            : "Draft kurikulum. Perubahan konflik AI belum tentu final sampai publikasi."}
+            ? "Versi terbit dari jadwal dipublikasikan."
+            : "Jadwal belum dipublikasikan — grid kosong sampai kurikulum mempublikasikan."}
         </p>
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        {GURU.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setViewGuruId(item.id)}
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-medium",
-              viewGuruId === item.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            )}
-          >
-            {item.nama}
-          </button>
-        ))}
-      </div>
-      <p className="text-sm">
-        {guru.nama}
-        {guru.hari_libur_ids.length > 0 ? " · hari piket Rabu" : ""}
-      </p>
-      <ScheduleGrid guruId={viewGuruId} interactive={false} />
+      {!activeJadwalId ? (
+        <p className="text-sm text-muted-foreground">Belum ada jadwal semester.</p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-1.5">
+            {catalog.guru.filter((g) => g.aktif).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setViewGuruId(item.id)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-medium",
+                  viewGuruId === item.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}
+              >
+                {item.nama_lengkap}
+              </button>
+            ))}
+          </div>
+          {guru ? <p className="text-sm">{guru.nama_lengkap}</p> : null}
+          <ScheduleGrid
+            guruId={guru?.id ?? null}
+            slots={displaySlots}
+            showConflicts={false}
+            interactive={false}
+          />
+        </>
+      )}
       <p className="text-xs text-muted-foreground">
-        Demo: ganti role di sidebar. Kelas siswa ada di tampilan Siswa
-        {KELAS.length ? ` (${KELAS.map((k) => k.nama).join(", ")})` : ""}.
+        Demo: ganti role di akun sidebar.
         <button
           type="button"
           className="ml-1 underline"
