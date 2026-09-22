@@ -1,141 +1,110 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { AiBadge } from "@/components/ai-badge";
-import { AiInsightBar } from "@/components/ai-insight-bar";
-import { matchQuery } from "@/lib/mock";
-import type { QueryAnswer } from "@/lib/prototype-types";
+import { AiPromptComposer } from "@/components/ai-prompt-composer";
+import { api } from "@/lib/api";
+import { useJadwal } from "@/lib/jadwal-context";
+import { cn } from "@/lib/utils";
 
 const CHIPS = [
   "Guru siapa yang bentrok hari Senin?",
   "Guru mana yang paling banyak mengajar minggu ini?",
-  "Cari slot kosong Pak Ahmad",
-  "Mengapa jadwal XI DKV belum dapat dipublikasikan?",
   "Tampilkan seluruh konflik minggu ini",
 ];
 
 export default function AiTanyaPage() {
+  const { activeJadwalId, semesterLabel } = useJadwal();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [thread, setThread] = useState<{ q: string; a: QueryAnswer | "empty" }[]>([]);
+  const [thread, setThread] = useState<{ q: string; a: string; err?: boolean }[]>([]);
+
+  const hasThread = thread.length > 0;
 
   const ask = async (text: string) => {
     const pertanyaan = text.trim();
-    if (!pertanyaan) return;
+    if (!pertanyaan || loading) return;
+    if (!activeJadwalId) {
+      setThread((prev) => [
+        ...prev,
+        { q: pertanyaan, a: "Buat atau pilih jadwal semester dulu.", err: true },
+      ]);
+      setInput("");
+      return;
+    }
     setLoading(true);
     setInput("");
-    await new Promise((r) => setTimeout(r, 450));
-    const matched = matchQuery(pertanyaan);
-    setThread((prev) => [...prev, { q: pertanyaan, a: matched ?? "empty" }]);
-    setLoading(false);
+    try {
+      const res = await api.aiTanya(pertanyaan, activeJadwalId);
+      setThread((prev) => [...prev, { q: pertanyaan, a: res.jawaban }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Gagal menghubungi AI";
+      setThread((prev) => [...prev, { q: pertanyaan, a: msg, err: true }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Tanya AI</h1>
-          <AiBadge>Schedule Query</AiBadge>
+    <div
+      data-component="GIS/AiTanya"
+      className={cn(
+        "mx-auto flex w-full max-w-3xl flex-col",
+        hasThread ? "min-h-[calc(100dvh-12rem)]" : "min-h-[calc(100dvh-14rem)] justify-center",
+      )}
+    >
+      {!hasThread ? (
+        <div className="mb-8 space-y-2 text-center">
+          <h1 className="gis-page-title text-[2rem] md:text-[2.25rem]">Ada yang bisa dibantu?</h1>
+          <p className="text-sm text-muted-foreground">
+            Pertanyaan terikat ke jadwal aktif
+            {semesterLabel !== "Belum ada jadwal aktif" ? ` · ${semesterLabel}` : ""}
+          </p>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Cari informasi jadwal dalam bahasa sehari-hari. Jawaban prototipe memakai data dummy SMK Grafika.
-        </p>
-      </div>
-
-      <AiInsightBar
-        title="Pertanyaan terikat ke jadwal Ganjil 2026/2027"
-        detail="Bukan chatbot bebas. Hasil bisa berupa tabel konflik, daftar slot kosong, atau alasan publikasi dikunci."
-      />
-
-      <div className="flex flex-wrap gap-2">
-        {CHIPS.map((chip) => (
-          <button
-            key={chip}
-            type="button"
-            onClick={() => ask(chip)}
-            className="rounded-full bg-ai-muted px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-ai hover:text-ai-foreground"
-          >
-            {chip}
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-4">
-        {thread.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Pilih contoh di atas atau ketik pertanyaan.</p>
-        ) : (
-          thread.map((item, i) => (
-            <article key={i} className="space-y-2">
-              <p className="rounded-xl bg-secondary px-3 py-2 text-sm">{item.q}</p>
-              <div className="rounded-xl bg-ai-muted px-3 py-3 text-sm">
-                {item.a === "empty" ? (
-                  <p>
-                    Tidak ketemu di data dummy. Coba salah satu contoh: bentrok Senin, beban guru, slot kosong Ahmad, publikasi DKV, atau seluruh konflik.
-                  </p>
-                ) : (
-                  <>
-                    <p className="leading-relaxed">{item.a.answer}</p>
-                    {item.a.list ? (
-                      <ul className="mt-2 list-disc space-y-1 pl-4 text-foreground/85">
-                        {item.a.list.map((line) => (
-                          <li key={line}>{line}</li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    {item.a.table ? (
-                      <div className="mt-3 overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                          <thead>
-                            <tr>
-                              {item.a.table.columns.map((col) => (
-                                <th key={col} className="border-b border-foreground/10 py-1.5 pr-3 font-medium">
-                                  {col}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {item.a.table.rows.map((row, ri) => (
-                              <tr key={ri}>
-                                {row.map((cell, ci) => (
-                                  <td key={ci} className="py-1.5 pr-3 tabular-nums">
-                                    {cell}
-                                  </td>
-                                ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : null}
-                  </>
+      ) : (
+        <div className="mb-6 flex-1 space-y-6 overflow-y-auto pb-4">
+          {thread.map((item, i) => (
+            <article key={i} className="space-y-3">
+              <p className="text-base font-medium text-foreground">{item.q}</p>
+              <div
+                className={cn(
+                  "rounded-[var(--radius-card)] border px-4 py-3 text-sm leading-relaxed",
+                  item.err
+                    ? "border-destructive/20 bg-destructive/10 text-destructive"
+                    : "border-primary/15 bg-ai-muted text-foreground",
                 )}
+              >
+                <p className="whitespace-pre-wrap">{item.a}</p>
               </div>
             </article>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      <form
-        className="flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          ask(input);
-        }}
-      >
-        <input
-          className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ai"
-          placeholder="Tanya soal bentrok, beban jam, slot kosong…"
+      <div className="shrink-0 space-y-4">
+        <AiPromptComposer
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={setInput}
+          onSubmit={() => void ask(input)}
+          placeholder="Guru siapa yang bentrok hari Senin?"
+          loading={loading}
         />
-        <Button type="submit" disabled={loading}>
-          <Send className="mr-1.5 size-4" />
-          {loading ? "…" : "Tanya"}
-        </Button>
-      </form>
+
+        {!hasThread ? (
+          <div className="flex flex-wrap justify-center gap-2">
+            {CHIPS.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => void ask(chip)}
+                disabled={loading}
+                className="rounded-full border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 disabled:opacity-50"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
