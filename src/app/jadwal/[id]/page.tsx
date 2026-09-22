@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Send, Sparkles } from "lucide-react";
@@ -14,8 +14,11 @@ import { AiInsightBar } from "@/components/ai-insight-bar";
 import { AiBadge } from "@/components/ai-badge";
 import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
-import { cn } from "@/lib/utils";
 import { jadwalKonflikHref } from "@/lib/navigation";
+import { KelasGridFilter } from "@/components/kelas-grid-filter";
+import { GisPanel } from "@/components/gis-surface";
+import { nestedKelas } from "@/lib/jadwal-labels";
+import { api } from "@/lib/api";
 
 function JadwalDetailInner() {
   const params = useParams();
@@ -28,6 +31,8 @@ function JadwalDetailInner() {
     loadJadwal,
     jadwal,
     slots,
+    jadwalKelasAktif,
+    jadwalList,
     semesterLabel,
     gridKelasId,
     setGridKelasId,
@@ -64,19 +69,48 @@ function JadwalDetailInner() {
     if (!result.ok && result.reason) setTab("publikasi");
   };
 
+  const [altJadwalId, setAltJadwalId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (slots.length > 0 || jadwalList.length < 2) {
+      setAltJadwalId(null);
+      return;
+    }
+    void (async () => {
+      for (const j of jadwalList) {
+        if (j.id === jadwalId) continue;
+        const rows = await api.getJadwalKelasAktif(j.id);
+        if (Array.isArray(rows) && rows.length > 0) {
+          setAltJadwalId(j.id);
+          return;
+        }
+      }
+      setAltJadwalId(null);
+    })();
+  }, [slots.length, jadwalList, jadwalId]);
+
   const kelasInJadwal = useMemo(() => {
-    const rows = (jadwal?.jadwal_kelas ?? []).filter((jk) => jk.is_active);
+    const rows = jadwalKelasAktif.length > 0
+      ? jadwalKelasAktif
+      : (jadwal?.jadwal_kelas ?? []).filter((jk) => jk.is_active);
     return rows
       .map((jk) => {
         const id = jk.kelas_id;
-        const nama =
-          jk.kelas?.nama ?? catalog.kelas.find((k) => k.id === id)?.nama ?? id;
+        const nested = nestedKelas(jk);
+        const nama = nested?.nama ?? catalog.kelas.find((k) => k.id === id)?.nama ?? id;
         return { id, nama };
       })
       .sort((a, b) => a.nama.localeCompare(b.nama, "id"));
-  }, [jadwal, catalog.kelas]);
+  }, [jadwalKelasAktif, jadwal, catalog.kelas]);
 
   const konflikHref = jadwalKonflikHref(jadwalId);
+
+  useEffect(() => {
+    if (kelasInJadwal.length === 0) return;
+    if (!gridKelasId || !kelasInJadwal.some((k) => k.id === gridKelasId)) {
+      setGridKelasId(kelasInJadwal[0].id);
+    }
+  }, [kelasInJadwal, gridKelasId, setGridKelasId]);
 
   return (
     <div className="space-y-6">
@@ -145,47 +179,45 @@ function JadwalDetailInner() {
           ) : null}
           {slots.length === 0 ? (
             <AiInsightBar
-              title="Jadwal masih kosong"
-              detail="Seed skeleton hanya mengisi master + kelas terdaftar. Isi slot lewat plotting/import — atau jalankan seed fase berikutnya yang memuat isi PDF."
-            />
-          ) : null}
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => setGridKelasId("")}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium",
-                gridKelasId === "" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}
-            >
-              Semua kelas
-            </button>
-            {kelasInJadwal.map((kelas) => (
-              <button
-                key={kelas.id}
-                type="button"
-                onClick={() => setGridKelasId(kelas.id)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium",
-                  gridKelasId === kelas.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                )}
-              >
-                {kelas.nama}
-              </button>
-            ))}
-            {kelasInJadwal.length === 0 ? (
-              <span className="px-2 py-1 text-xs text-muted-foreground">Belum ada kelas di jadwal ini</span>
-            ) : null}
-          </div>
-          <ScheduleGrid
-            kelasId={gridKelasId || null}
-            onSlotClick={(_, conflicts) => {
-              if (conflicts[0]) {
-                setSelectedConflictId(conflicts[0].id);
-                setTab("konflik");
+              title="Jadwal ini belum berisi slot"
+              detail={
+                altJadwalId
+                  ? "Ada jadwal lain untuk semester yang sama yang sudah terisi dari seed. Buka jadwal tersebut, atau jalankan make seed-slots di backend."
+                  : "Jalankan make seed-slots di backend (setelah seed-ganjil), lalu refresh halaman."
               }
-            }}
-          />
+            >
+              {altJadwalId ? (
+                <Link href={`/jadwal/${altJadwalId}`} className={buttonVariants({ size: "sm" })}>
+                  Buka jadwal berisi data
+                </Link>
+              ) : null}
+            </AiInsightBar>
+          ) : null}
+          <GisPanel className="overflow-hidden p-0">
+            <div className="flex flex-col gap-4 border-b border-border px-4 py-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Jadwal mingguan</h2>
+                <p className="text-sm text-muted-foreground">Senin – Jumat · per kelas</p>
+              </div>
+              <KelasGridFilter
+                kelas={kelasInJadwal}
+                value={gridKelasId}
+                onChange={setGridKelasId}
+                requireSelection
+              />
+            </div>
+            <ScheduleGrid
+              kelasId={gridKelasId || null}
+              embedded
+              showFooter
+              onSlotClick={(_, conflicts) => {
+                if (conflicts[0]) {
+                  setSelectedConflictId(conflicts[0].id);
+                  setTab("konflik");
+                }
+              }}
+            />
+          </GisPanel>
         </TabsContent>
 
         <TabsContent value="plotting">
