@@ -11,14 +11,19 @@ export function WorkflowStepper({ steps }: { steps: WorkflowStep[] }) {
       {steps.map((step, index) => (
         <li key={step.id} className="flex items-center gap-1">
           {index > 0 ? (
-            <span className="mx-1 h-px w-4 bg-border sm:w-6" aria-hidden />
+            <span
+              className="mx-1 h-px w-6 bg-gradient-to-r from-border to-transparent sm:w-8"
+              aria-hidden
+            />
           ) : null}
           <Link
             href={step.href}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-              step.status === "done" && "bg-secondary text-secondary-foreground",
-              step.status === "current" && "bg-ai text-ai-foreground",
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-[box-shadow,colors]",
+              step.status === "done" &&
+                "border border-border bg-secondary text-secondary-foreground",
+              step.status === "current" &&
+                "border border-primary/30 bg-ai text-ai-foreground",
               step.status === "todo" && "bg-muted text-muted-foreground hover:text-foreground"
             )}
           >

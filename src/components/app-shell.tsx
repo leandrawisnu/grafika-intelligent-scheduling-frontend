@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment } from "react";
+import { Fragment, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SEMESTER_LABEL } from "@/lib/prototype-types";
+import { useJadwal } from "@/lib/jadwal-context";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,13 +13,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const SEGMENT_LABELS: Record<string, string> = {
   master: "Data Master",
-  jadwal: "Jadwal",
+  jadwal: "Jadwal semester",
   ai: "AI",
   guru: "Guru",
   siswa: "Siswa",
@@ -29,9 +28,10 @@ const SEGMENT_LABELS: Record<string, string> = {
   "tahun-ajaran": "Tahun Ajaran",
   "mata-pelajaran": "Mata Pelajaran",
   "jam-pelajaran": "Jam Pelajaran",
-  konflik: "Prediksi Konflik",
-  selesaikan: "Selesaikan",
-  tanya: "Tanya AI",
+  semester: "Semester",
+  konflik: "Konflik",
+  selesaikan: "Perbaiki konflik",
+  tanya: "Bantuan AI",
 };
 
 function labelForSegment(segment: string) {
@@ -45,7 +45,7 @@ function AppBreadcrumb() {
       <Breadcrumb className="min-w-0">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbPage>Dashboard</BreadcrumbPage>
+            <BreadcrumbPage>Beranda</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -87,6 +87,7 @@ function AppBreadcrumb() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { semesterLabel } = useJadwal();
 
   if (pathname === "/style-guide") {
     return <>{children}</>;
@@ -95,18 +96,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <SidebarProvider className="h-full min-h-0">
-        <AppSidebar />
+        <Suspense fallback={null}>
+          <AppSidebar />
+        </Suspense>
         <SidebarInset className="min-h-0 overflow-hidden">
-          <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/80 md:px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-1 hidden h-4 sm:block" />
+          <header className="flex h-16 shrink-0 items-center gap-2 bg-background px-4 md:px-6">
             <div className="min-w-0 flex-1">
               <AppBreadcrumb />
-              <p className="truncate text-xs text-muted-foreground sm:hidden">{SEMESTER_LABEL}</p>
+              <p className="truncate text-xs text-muted-foreground sm:hidden">{semesterLabel}</p>
             </div>
-            <p className="hidden shrink-0 text-xs text-muted-foreground md:block">{SEMESTER_LABEL}</p>
+            <p className="hidden shrink-0 text-xs text-muted-foreground md:block">{semesterLabel}</p>
           </header>
-          <div className="flex-1 overflow-auto p-4 md:p-6">{children}</div>
+          <div className="gis-main-canvas mx-auto flex-1 w-full max-w-[var(--page-max-width)] overflow-auto p-6 md:p-8">
+            {children}
+          </div>
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

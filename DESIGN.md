@@ -129,8 +129,21 @@ Rejected by the incumbent build and confirmed with the product owner: neon or gl
 - One chromatic voice (Press Blue, hue 247) for action, selection, focus, and AI
 - Cool Sheet neutrals, never warm cream
 - Quiet tools: compact controls, familiar affordances, Indonesian task copy
-- Tonal layering and hairline rings instead of elevation shadows
+- Tonal layering and hairline borders instead of elevation shadows
 - Timetable grid is the signature, not a card gallery
+
+## OpenAI Hybrid (structure)
+
+GIS keeps the **Press Blue palette** (hue 247) but adopts an **editorial OpenAI-style shell**: pill interactive controls, 6px cards, hairline `border-border`, no rest-state box-shadow, 16px body in chrome, 28px medium page titles (`.gis-page-title`).
+
+**Hybrid density:** shell, sidebar, forms, and hub pages use comfortable spacing (`p-6`–`p-8`, `--section-gap` 32px). **Operational zones stay compact:** schedule grid, CRUD `DataTable`, conflict/plotting lists keep `text-sm` and tight cell padding.
+
+### Structural tokens (`globals.css`)
+- `--radius-card`: 6px — panels, cards, dialogs, grid wrapper
+- `--radius-pill`: 9999px — buttons, inputs, selects, badges, nav pills
+- `--radius-link`: 4px — small in-grid corners
+- `--page-max-width`: 1200px — main canvas cap
+- `--shadow-surface` / `--shadow-lift`: `none` — depth from border + tone only
 
 ## Colors
 
@@ -162,10 +175,11 @@ A restrained cool family: paper, ink, and one bright working blue. Semantic red,
 **Character:** One workhorse sans. Headings gain weight and tracking-tight, not a second face. Data times use `tabular-nums`.
 
 ### Hierarchy
-- **Headline** (700, 1.5rem / `text-2xl`, tracking-tight): Screen titles (Sinkronisasi Ganjil 2026/2027).
-- **Title** (600, 1.125rem / `text-lg`): Section heads and dense tools.
-- **Body** (400, 0.875rem / `text-sm`, ~1.5 line-height, measure 65ch on prose): UI copy and explanations.
-- **Label** (500, 0.75rem / `text-xs`): Meta, chip text, jam ke- labels.
+- **Page title** (500, 1.75rem / `.gis-page-title`, tracking-tight): Screen titles (Sinkronisasi Ganjil 2026/2027).
+- **Section** (500, 0.875rem / `text-sm`): Section labels in shell — not uppercase microtype.
+- **Title** (500–600, 1.125rem / `text-lg`): Dense tool heads inside panels.
+- **Body** (400, 1rem / `text-base` in shell, `text-sm` in tables/grid): UI copy; prose measure ~65ch.
+- **Label** (500, 0.75rem–0.875rem): Meta, chip text, jam ke- labels.
 - **Mono** (400, ~11px): Token names in this document; not for “tech costume” on product UI.
 
 ### Named Rules
@@ -173,31 +187,33 @@ A restrained cool family: paper, ink, and one bright working blue. Semantic red,
 
 ## Layout
 
-Desktop: 16rem sidebar, remaining width is the board. Main padding `1.5rem` (`p-6`); mobile `1rem` plus a horizontal chip bar. Vertical rhythm: tight groups, `space-y-6` to `space-y-12` between sections. The timetable is a min-width ~720px table, days as columns, jam as rows. Filter chips sit above the grid. AI Resolve uses a list + three equal solution columns at `lg`. Do not fluid-scale headings.
+Desktop: 16rem sidebar, remaining width is the board capped at 1200px. Main padding `1.5rem`–`2rem` (`p-6`–`p-8`). Header ~64px, no heavy divider — whitespace separates chrome. Vertical rhythm: `space-y-6` to `space-y-8` in shell; `space-y-12` on marketing-style pages. The timetable is a min-width ~720px table, days as columns, jam as rows. Filter chips sit above the grid. AI Resolve uses a list + three equal solution columns at `lg`. Do not fluid-scale headings.
 
 ## Elevation & Depth
 
-Tonal, not lifted. Sidebar is a cooler gray field; cards are slightly lighter than Cool Sheet; separation is `ring-1 ring-foreground/10`. Dialogs use the shared popover surface and a light dim overlay, not a floating shadow stack.
+Tonal first, **border-only**. Sidebar is a cooler gray field; cards are slightly lighter than Cool Sheet; separation is `border border-border` (1px). **No rest-state box-shadow** on panels, hub cards, or buttons. Dialogs use popover surface + light dim overlay.
 
-### Shadow Vocabulary
-- **None at rest.** Product cards and the grid do not ship `box-shadow` as elevation.
-- **Focus** (`box-shadow` via `ring-3` / `--ring` at 50%): Press Blue, 3px, on buttons, inputs, and grid cells.
+### Depth Vocabulary
+- **Border** (`border-border`): Default edge for `.gis-panel`, cards, tables, dialogs.
+- **Whisper hover** (`bg-muted/50`): Interactive hub cards and ghost nav — no translateY lift.
+- **None on grid.** Timetable wrapper uses border only; cells stay flat fill.
+- **Focus** (`ring-1` / `--ring` at 40%): Press Blue on buttons, inputs; grid cells keep ring-3 when interactive.
 
 ### Named Rules
-**The Ring Not Shadow Rule.** Surfaces are flat. A 1px ring (or Press Blue focus ring) is the depth system. Do not add rest-state drop shadows to look “premium.”
+**Border, not shadow.** Default depth is 1px hairline + tonal layer. Never stack drop shadows on cards at rest.
 
 ## Shapes
 
-Comfortable product radii: controls `0.625rem` (rounded-lg), cards and insight bar `0.875rem` (rounded-xl), chips and AI badges pill (`9999px`). Hairline borders on inputs; cards prefer the ink-tint ring over a heavy stroke. No thick left accent bars on conflict cards.
+OpenAI hybrid radii: **pill** (`9999px`) for buttons, inputs, selects, badges, workflow chips, sidebar nav; **6px** (`--radius-card`) for cards, panels, insight bar, dialogs; **4px** (`--radius-link`) for in-grid cell corners. Hairline borders on all interactive surfaces. No thick left accent bars on conflict cards.
 
 ## Components
 
 Quiet tools: compact, familiar, Indonesian labels. Primary fill is rare.
 
 ### Buttons
-- **Shape:** 0.625rem corners, height 2rem default, horizontal padding 0.625rem, 0.875rem medium text.
-- **Primary:** Press Blue fill, Press Blue ink text; hover at 80% opacity; active nudges 1px down.
-- **Hover / Focus:** Focus is Press Blue ring 3px at 50%. Outline uses Cool Sheet + border; ghost is transparent until muted hover.
+- **Shape:** Pill (`rounded-full`), height 2.25rem default (`h-9`), horizontal padding 1.25rem, 0.875rem medium text.
+- **Primary:** Press Blue fill, Press Blue ink text; hover lightens mix; active nudges 1px down.
+- **Hover / Focus:** Focus is Press Blue ring 1px at 40%. Outline is transparent + `border-border`; ghost is transparent until muted hover.
 - **Disabled:** 50% opacity, no pointer. Publish stays disabled while conflicts remain.
 
 ### Chips
@@ -205,21 +221,21 @@ Quiet tools: compact, familiar, Indonesian labels. Primary fill is rare.
 - **State:** Used for role switch, kelas/guru filters. Never black-on-white inversion for “selected.”
 
 ### Cards / Containers
-- **Corner Style:** 0.875rem
+- **Corner Style:** 6px (`--radius-card`)
 - **Background:** Surface
-- **Shadow Strategy:** Ring, not shadow (see Elevation)
-- **Border:** `ring-foreground/10`
+- **Shadow Strategy:** None at rest (see Elevation)
+- **Border:** `border-border`
 - **Internal Padding:** 1rem (`--spacing(4)`); sm cards 0.75rem
 
 ### Inputs / Fields
-- **Style:** Height 2rem, 0.625rem radius, transparent fill, `border-input`
-- **Focus:** Border and ring become Press Blue
+- **Style:** Height 2.5rem shell / 2rem compact table, pill radius, transparent fill, `border-input`
+- **Focus:** Border and thin Press Blue ring
 - **Error / Disabled:** Destructive ring; disabled muted fill at 50% opacity. Caret is Press Blue.
 
 ### Navigation
 - **Sidebar:** Cooler gray column, 16rem, hidden below `md`. Brand lockup is “Grafika” + “Intelligent Scheduling.”
-- **Default:** Muted text, 0.875rem, 0.75rem padding, 0.625rem radius.
-- **Active:** Nav wash + Press Blue text, medium weight.
+- **Default:** Ghost pill — muted text, 0.875rem, medium weight; hover `bg-muted/50`.
+- **Active:** `bg-primary/5` + Press Blue text + 3px left bar; no filled block wash.
 - **AI group:** Same Press Blue as the rest of the system; count pill when conflicts are open.
 - **Mobile:** Horizontal scroller with the same selected-chip language.
 
@@ -227,7 +243,7 @@ Quiet tools: compact, familiar, Indonesian labels. Primary fill is rare.
 Pill, Press Blue, 11px medium, Sparkles icon at 12px. Marks machine output on titles, cells, and insight bars.
 
 ### AI Insight Bar
-0.875rem radius, Press wash field, 32px Press Blue icon well, title in ink, optional primary action on the right. Used for prediction status and publish locks.
+6px radius, `border-primary/15`, Press wash field, 32px Press Blue icon well, title in ink, optional primary action on the right. Used for prediction status and publish locks.
 
 ### Schedule Grid
 Day × jam table. Empty cells dashed border. Rest cells muted/secondary. Unplotted: warning wash. AI-predicted error: destructive wash + ring; warning: amber wash. Conflict cells show the AI badge. Interactive cells use a Press Blue focus ring.
