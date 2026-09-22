@@ -129,4 +129,7 @@ export interface Konflik {
   deskripsi: string;
   terselesaikan: boolean;
   terdeteksi_pada: string;
+  slot_a_id?: string | null;
+  slot_b_id?: string | null;
+  guru_id?: string | null;
 }
