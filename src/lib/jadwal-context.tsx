@@ -12,17 +12,38 @@ import {
 import { api } from "@/lib/api";
 import { konflikToListItem, type ConflictListItem } from "@/lib/conflict-display";
 import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
-import type { JadwalSemester, Konflik, SlotJadwal } from "@/lib/types";
+import type { JadwalKelas, JadwalSemester, Konflik, SlotJadwal } from "@/lib/types";
 import type { WorkflowStep } from "@/lib/prototype-types";
 
 const STORAGE_KEY = "gis.activeJadwalSemesterId";
 
-function flattenSlots(jadwalKelas: { slot_jadwal?: SlotJadwal[] }[]): SlotJadwal[] {
+function slotsOfJk(jk: JadwalKelas): SlotJadwal[] {
+  return jk.slot_jadwal ?? (jk as JadwalKelas & { SlotJadwal?: SlotJadwal[] }).SlotJadwal ?? [];
+}
+
+function flattenSlots(jadwalKelas: JadwalKelas[]): SlotJadwal[] {
   const out: SlotJadwal[] = [];
   for (const jk of jadwalKelas) {
-    for (const s of jk.slot_jadwal ?? []) out.push(s);
+    for (const s of slotsOfJk(jk)) out.push(s);
   }
   return out;
+}
+
+async function jadwalHasKelasAktif(id: string): Promise<boolean> {
+  const rows = await api.getJadwalKelasAktif(id);
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+async function pickJadwalId(list: JadwalSemester[], stored: string | null): Promise<string | null> {
+  if (list.length === 0) return null;
+  if (stored && list.some((j) => j.id === stored) && await jadwalHasKelasAktif(stored)) {
+    return stored;
+  }
+  for (const j of list) {
+    if (await jadwalHasKelasAktif(j.id)) return j.id;
+  }
+  if (stored && list.some((j) => j.id === stored)) return stored;
+  return list[0]?.id ?? null;
 }
 
 type JadwalStore = {
@@ -33,6 +54,7 @@ type JadwalStore = {
   jadwal: JadwalSemester | null;
   semesterLabel: string;
   slots: SlotJadwal[];
+  jadwalKelasAktif: JadwalKelas[];
   konflik: Konflik[];
   conflictItems: ConflictListItem[];
   validated: boolean;
@@ -72,6 +94,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const [activeJadwalId, setActiveJadwalIdState] = useState<string | null>(null);
   const [jadwal, setJadwal] = useState<JadwalSemester | null>(null);
   const [slots, setSlots] = useState<SlotJadwal[]>([]);
+  const [jadwalKelasAktif, setJadwalKelasAktif] = useState<JadwalKelas[]>([]);
   const [konflik, setKonflik] = useState<Konflik[]>([]);
   const [validated, setValidated] = useState(false);
   const [mlPredicted, setMlPredicted] = useState(false);
@@ -90,6 +113,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const loadSlotsFor = useCallback(async (jsId: string) => {
     const kelasAktif = await api.getJadwalKelasAktif(jsId);
     const list = Array.isArray(kelasAktif) ? kelasAktif : [];
+    setJadwalKelasAktif(list);
     setSlots(flattenSlots(list));
   }, []);
 
@@ -137,7 +161,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       const list = await refreshList();
       const stored =
         typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-      const pick = stored && list.some((j) => j.id === stored) ? stored : list[0]?.id ?? null;
+      const pick = await pickJadwalId(list, stored);
       if (pick) await loadJadwal(pick);
       else setLoading(false);
     })();
@@ -304,6 +328,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       jadwal,
       semesterLabel,
       slots,
+      jadwalKelasAktif,
       konflik,
       conflictItems,
       validated,
@@ -341,6 +366,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       jadwal,
       semesterLabel,
       slots,
+      jadwalKelasAktif,
       konflik,
       conflictItems,
       validated,

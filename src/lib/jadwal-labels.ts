@@ -1,4 +1,12 @@
-import type { JadwalSemester, Semester } from "@/lib/types";
+import type { JadwalKelas, JadwalSemester, Semester } from "@/lib/types";
+
+/** Nested kelas from API (`kelas` or legacy `Kelas`). */
+export function nestedKelas(jk: JadwalKelas): { nama: string } | undefined {
+  if (jk.kelas?.nama) return { nama: jk.kelas.nama };
+  const legacy = (jk as JadwalKelas & { Kelas?: { nama?: string } }).Kelas;
+  if (legacy?.nama) return { nama: legacy.nama };
+  return undefined;
+}
 
 /** Nested semester from API (`semester` or legacy `Semester`). */
 export function nestedSemester(j: JadwalSemester): { nama?: string } | undefined {
