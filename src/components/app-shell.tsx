@@ -107,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <p className="hidden shrink-0 text-xs text-muted-foreground md:block">{semesterLabel}</p>
           </header>
-          <div className="gis-main-canvas mx-auto flex-1 w-full max-w-[var(--page-max-width)] overflow-auto p-6 md:p-8">
+          <div className="gis-main-canvas gis-scrollbar mx-auto flex-1 w-full max-w-[var(--page-max-width)] overflow-auto p-6 md:p-8">
             {children}
           </div>
         </SidebarInset>
