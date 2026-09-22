@@ -31,15 +31,19 @@ export function GisSectionHeading({
 export function GisStatTile({
   label,
   value,
+  hint,
   tone = "default",
   icon: Icon,
   className,
+  valueClassName,
 }: {
   label: string;
   value: React.ReactNode;
-  tone?: "default" | "ai";
+  hint?: string;
+  tone?: "default" | "ai" | "danger";
   icon?: LucideIcon;
   className?: string;
+  valueClassName?: string;
 }) {
   return (
     <div
@@ -49,13 +53,23 @@ export function GisStatTile({
       <dt
         className={cn(
           "flex items-center gap-1 text-xs text-muted-foreground",
-          tone === "ai" && "text-ai"
+          tone === "ai" && "text-ai",
+          tone === "danger" && "text-destructive"
         )}
       >
         {Icon ? <Icon className="size-3.5 shrink-0" aria-hidden /> : null}
         {label}
       </dt>
-      <dd className="mt-1 font-medium tabular-nums">{value}</dd>
+      <dd
+        className={cn(
+          "mt-1 text-2xl font-semibold tabular-nums tracking-tight",
+          tone === "danger" && "text-destructive",
+          valueClassName
+        )}
+      >
+        {value}
+      </dd>
+      {hint ? <p className="mt-0.5 text-[11px] text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
