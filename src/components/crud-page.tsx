@@ -325,7 +325,7 @@ export function CRUDPage({
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Pastikan backend jalan ({process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}).
+              Pastikan backend jalan.
             </p>
             <Button type="button" variant="outline" size="sm" onClick={() => void load()}>
               Coba lagi
