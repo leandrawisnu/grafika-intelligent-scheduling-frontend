@@ -13,17 +13,14 @@ import {
   LogOut,
   MoreHorizontal,
   PanelLeft,
-  RotateCcw,
   Settings,
   Sparkles,
   HelpCircle,
-  Check,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePrototype } from "@/lib/prototype-store";
-import type { Role } from "@/lib/prototype-types";
+import { useSesi } from "@/lib/sesi-context";
 import { useJadwal } from "@/lib/jadwal-context";
 import { jadwalDetailHref, jadwalKonflikHref } from "@/lib/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -43,12 +40,6 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-const roles: { id: Role; label: string }[] = [
-  { id: "kurikulum", label: "Kurikulum" },
-  { id: "guru", label: "Guru" },
-  { id: "siswa", label: "Siswa" },
-];
 
 /** Urutan sama dengan alur setup di /master (hanya halaman CRUD yang ada). */
 const sidebarMenuGap = "gap-2";
@@ -229,27 +220,37 @@ function KurikulumSidebarNav() {
   );
 }
 
-function RoleSidebarNav({ role }: { role: Role }) {
+function KoorSidebarNav() {
   const pathname = usePathname();
-  const href = role === "guru" ? "/guru/jadwal" : "/siswa/jadwal";
-  const label = role === "guru" ? "Jadwal mengajar" : "Jadwal pelajaran";
-  const active = isActivePath(pathname, href);
+  const { activeJadwalId } = useJadwal();
+  const jadwalHref = activeJadwalId ? `/jadwal/${activeJadwalId}` : "/jadwal";
+  const jadwalActive = pathname === "/jadwal" || pathname.startsWith("/jadwal/");
 
   return (
-    <SidebarGroup className="py-1">
-      <SectionLabel>Workspace</SectionLabel>
-      <SidebarGroupContent>
-        <SidebarMenu className={sidebarMenuGap}>
-          <WorkspaceNavItem href={href} label={label} icon={Calendar} active={active} />
-          <WorkspaceNavItem
-            href="/ai/tanya"
-            label="Tanya AI"
-            icon={HelpCircle}
-            active={pathname.startsWith("/ai/tanya")}
-          />
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <>
+      <SidebarGroup className="py-1">
+        <SectionLabel>Workspace</SectionLabel>
+        <SidebarGroupContent>
+          <SidebarMenu className={sidebarMenuGap}>
+            <WorkspaceNavItem
+              href={jadwalHref}
+              label="Jadwal jurusan"
+              icon={Calendar}
+              active={jadwalActive}
+            />
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+      <SidebarGroup className="py-1">
+        <SectionLabel>Data master</SectionLabel>
+        <SidebarGroupContent>
+          <SidebarMenu className={sidebarMenuGap}>
+            <MasterNavItem href="/master/kelas" label="Kelas" icon={GraduationCap} />
+            <MasterNavItem href="/master/jurusan" label="Jurusan" icon={Building2} />
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </>
   );
 }
 
@@ -276,29 +277,32 @@ function AccountMenuButton({
   );
 }
 
+function inisial(email: string) {
+  const nama = email.split("@")[0] ?? "";
+  return nama.slice(0, 2).toUpperCase() || "GIS";
+}
+
+function labelPeran(peran: string | undefined) {
+  return peran === "koor_jurusan" ? "Koor Jurusan" : "Admin";
+}
+
 function SidebarFooterNav() {
   const router = useRouter();
-  const { role, setRole, resetDemo } = usePrototype();
+  const sesi = useSesi();
   const { toggleSidebar } = useSidebar();
   const [accountOpen, setAccountOpen] = useState(false);
-  const roleTitle =
-    role === "kurikulum" ? "Koordinator kurikulum" : role === "guru" ? "Guru" : "Siswa";
+  const email = sesi?.email ?? "";
+  const peran = labelPeran(sesi?.peran);
 
   const closeAnd = (action: () => void) => {
     setAccountOpen(false);
     action();
   };
 
-  const onRoleChange = (id: Role) => {
-    setRole(id);
-    if (id === "guru") router.push("/guru/jadwal");
-    else if (id === "siswa") router.push("/siswa/jadwal");
-    else router.push("/");
-  };
-
-  const onLogout = () => {
-    resetDemo();
-    router.push("/");
+  const onLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+    router.refresh();
   };
 
   return (
@@ -322,12 +326,12 @@ function SidebarFooterNav() {
       <div className="flex items-center gap-2 rounded-xl px-2 py-2">
         <Avatar className="size-9 rounded-full">
           <AvatarFallback className="rounded-full bg-primary/15 text-xs font-semibold text-primary">
-            NS
+            {inisial(email)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-sm font-semibold">Nadia Salsabila</p>
-          <p className="truncate text-xs text-muted-foreground">{roleTitle}</p>
+          <p className="truncate text-sm font-semibold">{email || "Akun"}</p>
+          <p className="truncate text-xs text-muted-foreground">{peran}</p>
         </div>
         <Popover open={accountOpen} onOpenChange={setAccountOpen}>
           <PopoverTrigger
@@ -351,8 +355,8 @@ function SidebarFooterNav() {
             className="z-[200] w-56 gap-0 rounded-[var(--radius-card)] border border-border p-1.5"
           >
             <div className="border-b border-border/80 px-2 py-2">
-              <p className="text-sm font-semibold text-foreground">Nadia Salsabila</p>
-              <p className="text-xs text-muted-foreground">{roleTitle}</p>
+              <p className="truncate text-sm font-semibold text-foreground">{email || "Akun"}</p>
+              <p className="text-xs text-muted-foreground">{peran}</p>
             </div>
             <div className="py-1">
               <AccountMenuButton onClick={() => closeAnd(() => router.push("/style-guide"))}>
@@ -360,28 +364,10 @@ function SidebarFooterNav() {
                 Pengaturan
               </AccountMenuButton>
             </div>
-            <div className="border-t border-border/80 py-1">
-              <p className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Peran demo
-              </p>
-              {roles.map((item) => (
-                <AccountMenuButton
-                  key={item.id}
-                  onClick={() => closeAnd(() => onRoleChange(item.id))}
-                >
-                  <Check className={cn("size-4", role !== item.id && "opacity-0")} />
-                  {item.label}
-                </AccountMenuButton>
-              ))}
-              <AccountMenuButton onClick={() => closeAnd(() => resetDemo())}>
-                <RotateCcw className="size-4 text-muted-foreground" />
-                Reset demo
-              </AccountMenuButton>
-            </div>
             <div className="border-t border-border/80 pt-1">
               <AccountMenuButton
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => closeAnd(onLogout)}
+                onClick={() => closeAnd(() => void onLogout())}
               >
                 <LogOut className="size-4" />
                 Keluar
@@ -406,7 +392,7 @@ function CloseMobileOnNavigate() {
 }
 
 export function AppSidebar() {
-  const { role } = usePrototype();
+  const sesi = useSesi();
 
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-sidebar-border">
@@ -431,7 +417,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="gap-3 px-1">
-        {role === "kurikulum" ? <KurikulumSidebarNav /> : <RoleSidebarNav role={role} />}
+        {sesi?.peran === "koor_jurusan" ? <KoorSidebarNav /> : <KurikulumSidebarNav />}
       </SidebarContent>
 
       <SidebarFooter className="p-2 pb-3">

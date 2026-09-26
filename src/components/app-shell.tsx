@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { semesterLabel } = useJadwal();
 
-  if (pathname === "/style-guide") {
+  if (pathname === "/style-guide" || pathname === "/login" || pathname.startsWith("/login/")) {
     return <>{children}</>;
   }
 
