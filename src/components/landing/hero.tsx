@@ -3,15 +3,11 @@
 // hero-2 (vertical faded border accents),
 // hero-3 (left-aligned + framed preview).
 // Copy, ikon (lucide), dan token warna disesuaikan ke tema GIS.
-// Headline berputar memakai TextRotate dari Fancy Components (MIT).
-
-"use client";
 
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import TextRotate from "@/components/fancy/text/text-rotate";
 
 export function LandingHero({ children }: { children: React.ReactNode }) {
   return (
@@ -47,17 +43,9 @@ export function LandingHero({ children }: { children: React.ReactNode }) {
             )}
           >
             Sinkronisasi jadwal antar jurusan,{" "}
-            <TextRotate
-              as="span"
-              texts={["tanpa bentrok.", "tanpa revisi berulang.", "siap publikasi."]}
-              splitBy="words"
-              staggerDuration={0.02}
-              rotationInterval={2600}
-              mainClassName="inline-flex"
-              splitLevelClassName="overflow-hidden pb-1"
-              elementLevelClassName="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent"
-              transition={{ type: "spring", damping: 30, stiffness: 400 }}
-            />
+            <span className="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
+              tanpa bentrok.
+            </span>
           </h1>
 
           <p

@@ -25,7 +25,6 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LandingHero } from "@/components/landing/hero";
-import { ScrambleHeading } from "@/components/landing/scramble-heading";
 import SimpleMarquee from "@/components/fancy/blocks/simple-marquee";
 import Typewriter from "@/components/fancy/text/typewriter";
 
@@ -357,7 +356,7 @@ export default function LandingPage() {
           <div className="max-w-2xl">
             <Eyebrow>Masalah</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              <ScrambleHeading text="Sinkronisasi manual memakan waktu berhari-hari" />
+              Sinkronisasi manual memakan waktu berhari-hari
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Alur hari ini: tiap jurusan membuat draft, kurikulum memplot guru, lalu sinkronisasi —
@@ -389,7 +388,7 @@ export default function LandingPage() {
           <div className="max-w-2xl">
             <Eyebrow>Solusi AI</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              <ScrambleHeading text="AI sebagai pendukung keputusan, bukan pengganti" />
+              AI sebagai pendukung keputusan, bukan pengganti
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Deteksi yang pasti memakai rule engine. AI memberi alternatif berperingkat, penjelasan,
@@ -446,7 +445,7 @@ export default function LandingPage() {
             <div>
               <Eyebrow>Alur kerja</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              <ScrambleHeading text="Dari data master sampai publikasi" />
+              Dari data master sampai publikasi
             </h2>
             </div>
             <p className="shrink-0 text-xs text-muted-foreground">Geser untuk melihat semua tahap →</p>
@@ -468,7 +467,7 @@ export default function LandingPage() {
           <div className="max-w-2xl">
             <Eyebrow>Peran</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              <ScrambleHeading text="Setiap peran punya ruang kerjanya sendiri" />
+              Setiap peran punya ruang kerjanya sendiri
             </h2>
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -505,7 +504,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-3xl">
             <Eyebrow>Tanya jawab</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              <ScrambleHeading text="Yang sering ditanyakan" />
+              Yang sering ditanyakan
             </h2>
             <div className="mt-8 divide-y divide-border rounded-[var(--radius-card)] border border-border bg-card px-5">
               {FAQ.map((f) => (
