@@ -121,6 +121,27 @@ export interface SlotJadwal {
   guru?: { nama_lengkap: string };
 }
 
+export interface BarisImpor {
+  hari: string;
+  jam: string;
+  mata_pelajaran: string;
+  kelas: string;
+  guru: string;
+  ruangan: string;
+  hari_id?: string;
+  jam_pelajaran_id?: string;
+  mata_pelajaran_id?: string;
+  kelas_id?: string;
+  guru_id?: string;
+  ruangan_id?: string;
+  status: "siap" | "perlu_pilihan" | "sudah_ada";
+}
+
+export interface PratinjauImpor {
+  berkas_key: string;
+  baris: BarisImpor[];
+}
+
 export interface Konflik {
   id: string;
   jadwal_semester_id: string;

@@ -1,6 +1,6 @@
 import type {
   TahunAjaran, Semester, Jurusan, Guru, MataPelajaran, Kelas, Ruangan, Hari, JamPelajaran,
-  JadwalSemester, JadwalKelas, SlotJadwal, Konflik,
+  JadwalSemester, JadwalKelas, SlotJadwal, Konflik, PratinjauImpor,
 } from "@/lib/types";
 
 const BASE_URL = "/api/v1";
@@ -10,6 +10,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...options?.headers },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function requestForm<T>(path: string, body: FormData): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    credentials: "same-origin",
+    body,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -93,6 +106,23 @@ export const api = {
   getJadwalKelas: (id: string) => request<JadwalKelas>(`/jadwal-kelas/${id}`),
   getJadwalKelasAktif: (jsId: string) =>
     requestList<JadwalKelas>(`/jadwal-semester/${jsId}/jadwal-kelas-aktif`),
+
+  pratinjauImpor: (jsId: string, berkas: File) => {
+    const body = new FormData();
+    body.append("berkas", berkas);
+    return requestForm<PratinjauImpor>(`/jadwal-semester/${jsId}/impor/pratinjau`, body);
+  },
+  simpanImpor: (jsId: string, baris: {
+    kelas_id: string;
+    mata_pelajaran_id: string;
+    hari_id: string;
+    jam_pelajaran_id: string;
+    ruangan_id?: string;
+    guru_id?: string;
+  }[]) => request<{ jumlah: number }>(`/jadwal-semester/${jsId}/impor`, {
+    method: "POST",
+    body: JSON.stringify({ baris }),
+  }),
 
   // Slot
   tambahSlot: (jkId: string, d: Partial<SlotJadwal>) =>

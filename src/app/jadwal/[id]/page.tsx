@@ -7,6 +7,7 @@ import { Send, Sparkles } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImporJadwalDialog } from "@/components/impor-jadwal-dialog";
 import { ScheduleGrid } from "@/components/schedule-grid";
 import { PlottingPanel } from "@/components/plotting-panel";
 import { KonflikResolvePanel } from "@/components/konflik-resolve-panel";
@@ -131,6 +132,7 @@ function JadwalDetailInner() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ImporJadwalDialog jadwalId={jadwalId} disabled={published} />
           <Button variant="outline" onClick={() => void runValidasi()} disabled={validating || published}>
             {validating ? "Memvalidasi…" : validated ? "Validasi ulang" : "Validasi konflik"}
           </Button>
