@@ -25,6 +25,9 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LandingHero } from "@/components/landing/hero";
+import { ScrambleHeading } from "@/components/landing/scramble-heading";
+import SimpleMarquee from "@/components/fancy/blocks/simple-marquee";
+import Typewriter from "@/components/fancy/text/typewriter";
 
 export const metadata: Metadata = {
   title: "GIS — Grafika Intelligent Scheduling",
@@ -216,7 +219,7 @@ function IlustrasiGrid() {
       </div>
       <figcaption className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <LencanaAI>AI Conflict Predictor</LencanaAI>
-        Ilustrasi tampilan grid jadwal — bukan data sekolah.
+        Ilustrasi tampilan grid jadwal.
       </figcaption>
     </figure>
   );
@@ -277,7 +280,7 @@ function KartuResolusi() {
         ))}
       </div>
       <figcaption className="mt-3 text-xs text-muted-foreground">
-        Contoh keluaran AI Resolve — ilustrasi, bukan data sekolah.
+        Contoh keluaran AI Resolve.
       </figcaption>
     </figure>
   );
@@ -329,11 +332,32 @@ export default function LandingPage() {
           <KartuResolusi />
         </LandingHero>
 
+        <div className="overflow-hidden border-y border-border py-4" aria-hidden="true">
+          <SimpleMarquee baseVelocity={4} repeat={4} slowdownOnHover direction="left">
+            {[
+              "Deteksi bentrok guru",
+              "Plotting guru",
+              "Resolusi berperingkat",
+              "Penjelasan transparan",
+              "Tanya jadwal",
+              "Publikasi terkunci",
+            ].map((t) => (
+              <span
+                key={t}
+                className="mx-4 flex items-center gap-2 text-sm font-medium whitespace-nowrap text-muted-foreground"
+              >
+                <Sparkles className="size-4 shrink-0 text-primary" />
+                {t}
+              </span>
+            ))}
+          </SimpleMarquee>
+        </div>
+
         <section id="masalah" className="scroll-mt-20 py-14">
           <div className="max-w-2xl">
             <Eyebrow>Masalah</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Sinkronisasi manual memakan waktu berhari-hari
+              <ScrambleHeading text="Sinkronisasi manual memakan waktu berhari-hari" />
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Alur hari ini: tiap jurusan membuat draft, kurikulum memplot guru, lalu sinkronisasi —
@@ -365,7 +389,7 @@ export default function LandingPage() {
           <div className="max-w-2xl">
             <Eyebrow>Solusi AI</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              AI sebagai pendukung keputusan, bukan pengganti
+              <ScrambleHeading text="AI sebagai pendukung keputusan, bukan pengganti" />
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Deteksi yang pasti memakai rule engine. AI memberi alternatif berperingkat, penjelasan,
@@ -395,15 +419,35 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+          <div className="mt-3 rounded-[var(--radius-card)] border border-border bg-card p-4 sm:p-5">
+            <p className="text-xs font-semibold tracking-wide text-primary/80">Coba tanya</p>
+            <div className="mt-2 flex items-center gap-2 rounded-full border border-border px-4 py-2.5">
+              <Search className="size-4 shrink-0 text-primary" />
+              <Typewriter
+                text={[
+                  "Guru siapa yang bentrok hari Senin?",
+                  "Cari slot kosong Pak Ahmad",
+                  "Mengapa XI RPL 1 belum dipublikasikan?",
+                ]}
+                speed={55}
+                waitTime={2200}
+                className="min-w-0 flex-1 truncate text-sm"
+                cursorClassName="ml-0.5 text-primary"
+              />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Dijawab dari data jadwal aktual — ilustrasi.
+            </p>
+          </div>
         </section>
 
         <section id="alur" className="scroll-mt-20 py-14">
           <div className="flex max-w-2xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <Eyebrow>Alur kerja</Eyebrow>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Dari data master sampai publikasi
-              </h2>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+              <ScrambleHeading text="Dari data master sampai publikasi" />
+            </h2>
             </div>
             <p className="shrink-0 text-xs text-muted-foreground">Geser untuk melihat semua tahap →</p>
           </div>
@@ -424,7 +468,7 @@ export default function LandingPage() {
           <div className="max-w-2xl">
             <Eyebrow>Peran</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Setiap peran punya ruang kerjanya sendiri
+              <ScrambleHeading text="Setiap peran punya ruang kerjanya sendiri" />
             </h2>
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -461,7 +505,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-3xl">
             <Eyebrow>Tanya jawab</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Yang sering ditanyakan
+              <ScrambleHeading text="Yang sering ditanyakan" />
             </h2>
             <div className="mt-8 divide-y divide-border rounded-[var(--radius-card)] border border-border bg-card px-5">
               {FAQ.map((f) => (
