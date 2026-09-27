@@ -32,7 +32,7 @@ export default function LoginPage() {
         setError(data.error || "Email atau kata sandi salah.");
         return;
       }
-      router.replace("/");
+      router.replace("/beranda");
       router.refresh();
     } catch {
       setError("Tidak terhubung ke server.");

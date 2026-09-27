@@ -17,6 +17,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const SEGMENT_LABELS: Record<string, string> = {
+  beranda: "Beranda",
   master: "Data Master",
   jadwal: "Jadwal semester",
   ai: "AI",
@@ -40,7 +41,7 @@ function labelForSegment(segment: string) {
 
 function AppBreadcrumb() {
   const pathname = usePathname();
-  if (pathname === "/") {
+  if (pathname === "/beranda") {
     return (
       <Breadcrumb className="min-w-0">
         <BreadcrumbList>
@@ -64,7 +65,7 @@ function AppBreadcrumb() {
     <Breadcrumb className="min-w-0">
       <BreadcrumbList>
         <BreadcrumbItem className="hidden sm:inline-flex">
-          <BreadcrumbLink render={<Link href="/" />}>Beranda</BreadcrumbLink>
+          <BreadcrumbLink render={<Link href="/beranda" />}>Beranda</BreadcrumbLink>
         </BreadcrumbItem>
         {crumbs.map((crumb) => (
           <Fragment key={crumb.href}>
@@ -89,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { semesterLabel } = useJadwal();
 
-  if (pathname === "/style-guide" || pathname === "/login" || pathname.startsWith("/login/")) {
+  if (pathname === "/" || pathname === "/style-guide" || pathname === "/login" || pathname.startsWith("/login/")) {
     return <>{children}</>;
   }
 

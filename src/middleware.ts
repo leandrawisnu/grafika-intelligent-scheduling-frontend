@@ -31,6 +31,7 @@ export async function middleware(req: NextRequest) {
   const secure = secureFromForwarded(req.headers.get("x-forwarded-proto"), req.nextUrl.protocol);
   const token = req.cookies.get(sessionCookieName(secure))?.value;
   const halamanMasuk = pathname === "/login" || pathname.startsWith("/login/");
+  const halamanPublik = pathname === "/";
 
   if (pathname === "/api/auth/login" || pathname === "/api/auth/logout") {
     return tanpaCache(NextResponse.next());
@@ -42,6 +43,9 @@ export async function middleware(req: NextRequest) {
       res.headers.set("Content-Security-Policy", "frame-ancestors 'none'");
       res.headers.set("X-Frame-Options", "DENY");
       return res;
+    }
+    if (halamanPublik) {
+      return tanpaCache(NextResponse.next());
     }
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
@@ -79,7 +83,7 @@ export async function middleware(req: NextRequest) {
 
   if (halamanMasuk) {
     const url = req.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/beranda";
     url.search = "";
     return tanpaCache(NextResponse.redirect(url));
   }
