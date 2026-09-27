@@ -54,30 +54,34 @@ const MASALAH: { icon: LucideIcon; judul: string; isi: string }[] = [
   },
 ];
 
-const SOLUSI_AI: { icon: LucideIcon; tag: string; judul: string; isi: string }[] = [
+const SOLUSI_AI: { icon: LucideIcon; tag: string; judul: string; isi: string; bukti: string }[] = [
   {
     icon: ShieldCheck,
     tag: "Rule engine",
     judul: "Deteksi yang pasti",
-    isi: "Bentrok guru, ruangan, kelas, kelebihan jam, dan hari libur diperiksa tuntas — tanpa false negative.",
+    isi: "Bentrok guru, ruangan, kelas, kelebihan jam, dan hari libur diperiksa tuntas.",
+    bukti: "Tanpa false negative",
   },
   {
     icon: ListChecks,
     tag: "CSP + heuristik",
     judul: "Resolusi berperingkat",
-    isi: "Setiap konflik mendapat hingga 3 alternatif solusi beserta skor keyakinan. Kurikulum yang memutuskan.",
+    isi: "Setiap konflik mendapat hingga 3 alternatif solusi beserta skor keyakinan.",
+    bukti: "Alternatif ≤ 15 detik",
   },
   {
     icon: MessagesSquare,
     tag: "LLM",
     judul: "Penjelasan transparan",
     isi: "Setiap solusi disertai alasan berbahasa Indonesia yang bisa diverifikasi satu per satu.",
+    bukti: "Minimal 3 alasan per solusi",
   },
   {
     icon: Search,
     tag: "LLM + function calling",
     judul: "Tanya jadwal",
     isi: "Cari info jadwal dengan bahasa sehari-hari, misalnya “guru siapa yang bentrok hari Senin?”.",
+    bukti: "Jawaban ≤ 5 detik",
   },
 ];
 
@@ -90,12 +94,12 @@ const ALUR: { judul: string; isi: string }[] = [
   { judul: "Publikasi", isi: "Jadwal terbit ke guru dan siswa setelah bersih konflik." },
 ];
 
-const PERAN: { icon: LucideIcon; judul: string; isi: string }[] = [
-  { icon: UserCog, judul: "Super Admin", isi: "Mengelola data master, akun, dan konfigurasi sekolah." },
-  { icon: Database, judul: "Admin Jurusan", isi: "Menyusun draft dan mempublikasikan jadwal jurusannya." },
-  { icon: PenLine, judul: "Koordinator Mapel", isi: "Plotting guru dan menyelesaikan konflik mapelnya." },
-  { icon: Users, judul: "Guru", isi: "Melihat jadwal mengajar dan mengatur preferensi." },
-  { icon: GraduationCap, judul: "Siswa", isi: "Melihat jadwal pelajaran kelasnya sendiri." },
+const PERAN: { icon: LucideIcon; judul: string; lingkup: string; isi: string }[] = [
+  { icon: UserCog, judul: "Super Admin", lingkup: "Seluruh sekolah", isi: "Mengelola data master, akun, dan konfigurasi." },
+  { icon: Database, judul: "Admin Jurusan", lingkup: "1 jurusan", isi: "Menyusun draft dan mempublikasikan jadwal jurusannya." },
+  { icon: PenLine, judul: "Koordinator Mapel", lingkup: "1 mapel", isi: "Plotting guru dan menyelesaikan konflik mapelnya." },
+  { icon: Users, judul: "Guru", lingkup: "Jadwal sendiri", isi: "Melihat jadwal mengajar dan mengatur preferensi." },
+  { icon: GraduationCap, judul: "Siswa", lingkup: "Kelas sendiri", isi: "Melihat jadwal pelajaran kelasnya sendiri." },
 ];
 
 const FAQ: { tanya: string; jawab: string }[] = [
@@ -137,6 +141,22 @@ function LencanaAI({ children }: { children: React.ReactNode }) {
       <Sparkles className="size-3" />
       {children}
     </span>
+  );
+}
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs font-semibold tracking-wide text-primary/80">{children}</p>;
+}
+
+/** Satu layar per section: konten selalu vertikal-tengah, tumbuh bila kepanjangan. */
+function Layar({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <section
+      id={id}
+      className="flex min-h-[calc(100svh-4rem)] scroll-mt-20 flex-col justify-center py-12"
+    >
+      {children}
+    </section>
   );
 }
 
@@ -274,10 +294,6 @@ function KartuResolusi() {
   );
 }
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-semibold tracking-wide text-primary/80">{children}</p>;
-}
-
 export default function LandingPage() {
   return (
     <div className="h-full scroll-smooth overflow-y-auto bg-background text-foreground">
@@ -320,172 +336,197 @@ export default function LandingPage() {
 
       <main className="mx-auto w-full max-w-6xl px-6">
         <section
-          className="grid items-center gap-10 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:py-20"
+          className="flex min-h-[calc(100svh-4rem)] scroll-mt-20 flex-col justify-center py-12"
           style={{
             backgroundImage:
               "linear-gradient(to right, color-mix(in oklch, var(--primary) 7%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklch, var(--primary) 7%, transparent) 1px, transparent 1px)",
             backgroundSize: "2.5rem 2.5rem",
-            maskImage: "linear-gradient(to bottom, black 55%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 55%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
           }}
         >
-          <div>
-            <LencanaAI>AI Conflict Predictor</LencanaAI>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Sinkronisasi jadwal antar jurusan, tanpa bentrok.
-            </h1>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-              GIS membantu kurikulum menyusun, memplot guru, dan mempublikasikan jadwal pelajaran.
-              Potensi bentrok guru dan ruangan terdeteksi sejak plotting — lengkap dengan alternatif
-              solusi yang bisa dijelaskan dan dipertanggungjawabkan.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Link href="/login" className={buttonVariants({ size: "lg" })}>
-                Masuk ke dashboard
-                <ArrowRight className="ml-1.5 size-4" />
-              </Link>
-              <a href="#solusi" className={buttonVariants({ variant: "outline", size: "lg" })}>
-                Lihat cara kerja AI
-              </a>
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <LencanaAI>AI Conflict Predictor</LencanaAI>
+              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+                Sinkronisasi jadwal antar jurusan, tanpa bentrok.
+              </h1>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
+                GIS membantu kurikulum menyusun, memplot guru, dan mempublikasikan jadwal pelajaran.
+                Potensi bentrok guru dan ruangan terdeteksi sejak plotting — lengkap dengan alternatif
+                solusi yang bisa dijelaskan dan dipertanggungjawabkan.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Link href="/login" className={buttonVariants({ size: "lg" })}>
+                  Masuk ke dashboard
+                  <ArrowRight className="ml-1.5 size-4" />
+                </Link>
+                <a href="#solusi" className={buttonVariants({ variant: "outline", size: "lg" })}>
+                  Lihat cara kerja AI
+                </a>
+              </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Pilot project SMKN 4 Malang • Berbahasa Indonesia
+              </p>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              Pilot project SMKN 4 Malang • Berbahasa Indonesia
-            </p>
-          </div>
-          <div className="relative">
-            <IlustrasiGrid />
-            <div className="mt-3 lg:absolute lg:-bottom-8 lg:-left-8 lg:mt-0 lg:w-72">
+            <div className="min-w-0 space-y-3">
+              <IlustrasiGrid />
               <KartuResolusi />
             </div>
           </div>
         </section>
 
-        <div className="space-y-24 py-14 lg:pb-20">
-          <section id="masalah" className="scroll-mt-20 space-y-6">
-            <div className="max-w-2xl">
-              <Eyebrow>Masalah</Eyebrow>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Sinkronisasi manual memakan waktu berhari-hari
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Alur hari ini: tiap jurusan membuat draft, kurikulum memplot guru, lalu sinkronisasi —
-                dan bentrok baru ketahuan di akhir.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {MASALAH.map((m) => (
-                <div
-                  key={m.judul}
-                  className="rounded-[var(--radius-card)] border border-border bg-card p-4 transition-colors hover:bg-muted/50"
+        <Layar id="masalah">
+          <div className="max-w-2xl">
+            <Eyebrow>Masalah</Eyebrow>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Sinkronisasi manual memakan waktu berhari-hari
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Alur hari ini: tiap jurusan membuat draft, kurikulum memplot guru, lalu sinkronisasi —
+              dan bentrok baru ketahuan di akhir.
+            </p>
+          </div>
+          <ol className="mt-8 divide-y divide-border border-y border-border">
+            {MASALAH.map((m, i) => (
+              <li key={m.judul} className="flex items-start gap-5 py-6">
+                <span
+                  aria-hidden
+                  className="w-12 shrink-0 text-5xl font-semibold tabular-nums tracking-tight text-primary/15"
                 >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-card)] bg-destructive/10">
                   <m.icon className="size-5 text-destructive" />
-                  <h3 className="mt-2 text-sm font-semibold">{m.judul}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{m.isi}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+                </span>
+                <span className="min-w-0">
+                  <h3 className="text-base font-semibold tracking-tight">{m.judul}</h3>
+                  <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">{m.isi}</p>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Layar>
 
-          <section id="solusi" className="scroll-mt-20 space-y-6">
-            <div className="max-w-2xl">
-              <Eyebrow>Solusi AI</Eyebrow>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                AI sebagai pendukung keputusan, bukan pengganti
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Deteksi yang pasti memakai rule engine. AI memberi alternatif berperingkat, penjelasan,
-                dan pencarian jadwal berbahasa alami.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {SOLUSI_AI.map((s) => (
-                <div
-                  key={s.judul}
-                  className="rounded-[var(--radius-card)] border border-border bg-card p-4 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex items-center justify-between gap-2">
+        <Layar id="solusi">
+          <div className="max-w-2xl">
+            <Eyebrow>Solusi AI</Eyebrow>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+              AI sebagai pendukung keputusan, bukan pengganti
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Deteksi yang pasti memakai rule engine. AI memberi alternatif berperingkat, penjelasan,
+              dan pencarian jadwal berbahasa alami.
+            </p>
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            {SOLUSI_AI.map((s) => (
+              <div
+                key={s.judul}
+                className="flex flex-col rounded-[var(--radius-card)] border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-muted/50"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex size-11 items-center justify-center rounded-[var(--radius-card)] bg-ai-muted">
                     <s.icon className="size-5 text-primary" />
-                    <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                      {s.tag}
-                    </span>
-                  </div>
-                  <h3 className="mt-2 text-sm font-semibold">{s.judul}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.isi}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section id="alur" className="scroll-mt-20 space-y-6">
-            <div className="max-w-2xl">
-              <Eyebrow>Alur kerja</Eyebrow>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Dari data master sampai publikasi
-              </h2>
-            </div>
-            <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {ALUR.map((a, i) => (
-                <li key={a.judul} className="rounded-[var(--radius-card)] border border-border bg-card p-4">
-                  <span className="inline-flex size-7 items-center justify-center rounded-full bg-primary text-sm font-semibold tabular-nums text-primary-foreground">
-                    {i + 1}
                   </span>
-                  <h3 className="mt-2 text-sm font-semibold">{a.judul}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{a.isi}</p>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          <section id="peran" className="scroll-mt-20 space-y-6">
-            <div className="max-w-2xl">
-              <Eyebrow>Peran</Eyebrow>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Setiap peran punya ruang kerjanya sendiri
-              </h2>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {PERAN.map((p) => (
-                <div
-                  key={p.judul}
-                  className="rounded-[var(--radius-card)] border border-border bg-card p-4 transition-colors hover:bg-muted/50"
-                >
-                  <p.icon className="size-5 text-primary" />
-                  <h3 className="mt-2 text-sm font-semibold">{p.judul}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{p.isi}</p>
+                  <span className="rounded-full border border-border px-2.5 py-1 font-mono text-[11px] text-muted-foreground">
+                    {s.tag}
+                  </span>
                 </div>
-              ))}
-              <div className="rounded-[var(--radius-card)] border border-primary/15 bg-ai-muted p-4">
-                <CalendarCheck className="size-5 text-primary" />
-                <h3 className="mt-2 text-sm font-semibold">Publikasi terkunci sampai bersih</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Jadwal hanya bisa dipublikasikan jika tidak ada konflik yang tersisa.
+                <h3 className="mt-4 text-base font-semibold tracking-tight">{s.judul}</h3>
+                <p className="mt-1 flex-1 text-sm leading-relaxed text-muted-foreground">{s.isi}</p>
+                <p className="mt-4 flex items-center gap-1.5 border-t border-border pt-3 text-xs font-medium text-primary">
+                  <Check className="size-3.5" />
+                  {s.bukti}
                 </p>
               </div>
-            </div>
-          </section>
+            ))}
+          </div>
+        </Layar>
 
-          <section id="faq" className="scroll-mt-20 space-y-6">
-            <div className="max-w-2xl">
-              <Eyebrow>Tanya jawab</Eyebrow>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Yang sering ditanyakan
-              </h2>
-            </div>
-            <div className="grid gap-3 lg:grid-cols-2">
-              {FAQ.map((f) => (
-                <details
-                  key={f.tanya}
-                  className="group rounded-[var(--radius-card)] border border-border bg-card p-4"
+        <Layar id="alur">
+          <div className="max-w-2xl">
+            <Eyebrow>Alur kerja</Eyebrow>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Dari data master sampai publikasi
+            </h2>
+          </div>
+          <ol className="relative mt-8 space-y-7 border-l-2 border-border pl-0 sm:ml-3">
+            {ALUR.map((a, i) => (
+              <li key={a.judul} className="relative pl-10">
+                <span
+                  aria-hidden
+                  className="absolute top-0 -left-[13px] flex size-6 items-center justify-center rounded-full border-2 border-background bg-primary text-[11px] font-bold tabular-nums text-primary-foreground"
                 >
-                  <summary className="cursor-pointer text-sm font-semibold marker:text-primary">
-                    {f.tanya}
-                  </summary>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.jawab}</p>
-                </details>
-              ))}
-            </div>
-          </section>
+                  {i + 1}
+                </span>
+                <h3 className="text-base font-semibold tracking-tight">{a.judul}</h3>
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">{a.isi}</p>
+              </li>
+            ))}
+          </ol>
+        </Layar>
 
+        <Layar id="peran">
+          <div className="max-w-2xl">
+            <Eyebrow>Peran</Eyebrow>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Setiap peran punya ruang kerjanya sendiri
+            </h2>
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {PERAN.map((p) => (
+              <div
+                key={p.judul}
+                className="rounded-[var(--radius-card)] border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-muted/50"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-ai-muted">
+                    <p.icon className="size-5 text-primary" />
+                  </span>
+                  <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                    {p.lingkup}
+                  </span>
+                </div>
+                <h3 className="mt-4 text-base font-semibold tracking-tight">{p.judul}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{p.isi}</p>
+              </div>
+            ))}
+            <div className="rounded-[var(--radius-card)] border border-primary/15 bg-ai-muted p-5">
+              <span className="flex size-11 items-center justify-center rounded-full bg-primary">
+                <CalendarCheck className="size-5 text-primary-foreground" />
+              </span>
+              <h3 className="mt-4 text-base font-semibold tracking-tight">Publikasi terkunci sampai bersih</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Jadwal hanya bisa dipublikasikan jika tidak ada konflik yang tersisa.
+              </p>
+            </div>
+          </div>
+        </Layar>
+
+        <Layar id="faq">
+          <div className="max-w-2xl">
+            <Eyebrow>Tanya jawab</Eyebrow>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Yang sering ditanyakan
+            </h2>
+          </div>
+          <div className="mt-8 grid gap-3 lg:grid-cols-2">
+            {FAQ.map((f) => (
+              <details
+                key={f.tanya}
+                className="group rounded-[var(--radius-card)] border border-border bg-card p-4 transition-colors open:border-primary/40 hover:border-primary/40"
+              >
+                <summary className="cursor-pointer text-sm font-semibold marker:text-primary">
+                  {f.tanya}
+                </summary>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.jawab}</p>
+              </details>
+            ))}
+          </div>
+        </Layar>
+
+        <div className="py-14">
           <section className="rounded-[var(--radius-card)] border border-primary/15 bg-ai-muted p-6 sm:p-8">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div>
