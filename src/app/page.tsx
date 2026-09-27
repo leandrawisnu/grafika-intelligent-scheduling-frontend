@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ArrowRight,
   CalendarCheck,
   Check,
+  ChevronDown,
   Database,
   GraduationCap,
   Hourglass,
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LandingHero } from "@/components/landing/hero";
 
 export const metadata: Metadata = {
   title: "GIS — Grafika Intelligent Scheduling",
@@ -86,12 +87,12 @@ const SOLUSI_AI: { icon: LucideIcon; tag: string; judul: string; isi: string; bu
 ];
 
 const ALUR: { judul: string; isi: string }[] = [
-  { judul: "Data master", isi: "Guru, mapel, jurusan, kelas, ruangan, dan jam pelajaran disiapkan." },
-  { judul: "Draft jurusan", isi: "Admin jurusan menyusun slot mata pelajaran per kelas." },
-  { judul: "Plotting guru", isi: "Koordinator mapel menempatkan guru ke tiap slot." },
-  { judul: "Prediksi AI", isi: "Potensi bentrok terdeteksi real-time saat plotting." },
-  { judul: "Resolusi", isi: "Pilih solusi AI berperingkat atau perbaiki manual." },
-  { judul: "Publikasi", isi: "Jadwal terbit ke guru dan siswa setelah bersih konflik." },
+  { judul: "Data master", isi: "Guru, mapel, jurusan, kelas, ruangan, jam disiapkan." },
+  { judul: "Draft jurusan", isi: "Admin jurusan menyusun slot mapel per kelas." },
+  { judul: "Plotting guru", isi: "Koordinator menempatkan guru ke tiap slot." },
+  { judul: "Prediksi AI", isi: "Bentrok terdeteksi real-time saat plotting." },
+  { judul: "Resolusi", isi: "Pilih solusi AI atau perbaiki manual." },
+  { judul: "Publikasi", isi: "Terbit ke guru dan siswa bila sudah bersih." },
 ];
 
 const PERAN: { icon: LucideIcon; judul: string; lingkup: string; isi: string }[] = [
@@ -148,18 +149,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="text-xs font-semibold tracking-wide text-primary/80">{children}</p>;
 }
 
-/** Satu layar per section: konten selalu vertikal-tengah, tumbuh bila kepanjangan. */
-function Layar({ id, children }: { id: string; children: React.ReactNode }) {
-  return (
-    <section
-      id={id}
-      className="flex min-h-[calc(100svh-4rem)] scroll-mt-20 flex-col justify-center py-12"
-    >
-      {children}
-    </section>
-  );
-}
-
 function IlustrasiGrid() {
   const hari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
   const baris: { jam: string; sel: ({ mapel: string; bentrok?: boolean } | null)[] }[] = [
@@ -178,8 +167,8 @@ function IlustrasiGrid() {
   ];
   return (
     <figure className="rounded-[var(--radius-card)] border border-border bg-card p-4">
-      <div className="overflow-hidden rounded-[var(--radius-link)] border border-border">
-        <table className="w-full border-collapse text-xs">
+      <div className="overflow-x-auto rounded-[var(--radius-link)] border border-border">
+        <table className="w-full min-w-[540px] border-collapse text-xs">
           <thead>
             <tr className="bg-muted/60">
               <th className="w-10 border-b border-r border-border px-2 py-1.5 text-left font-medium text-muted-foreground">
@@ -298,17 +287,17 @@ export default function LandingPage() {
   return (
     <div className="h-full scroll-smooth overflow-y-auto bg-background text-foreground">
       <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-6">
+        <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <Logo />
             <span className="min-w-0 leading-tight">
               <span className="block truncate text-sm font-bold tracking-tight">GIS</span>
-              <span className="block truncate text-[11px] text-muted-foreground">
+              <span className="hidden truncate text-[11px] text-muted-foreground sm:block">
                 Grafika Intelligent Scheduling
               </span>
             </span>
           </Link>
-          <nav className="ml-6 hidden items-center gap-1 text-sm font-medium text-muted-foreground lg:flex">
+          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 text-sm font-medium text-muted-foreground lg:flex">
             <a href="#masalah" className="rounded-full px-3 py-1.5 hover:bg-muted/50 hover:text-foreground">
               Masalah
             </a>
@@ -334,49 +323,13 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-6">
-        <section
-          className="flex min-h-[calc(100svh-4rem)] scroll-mt-20 flex-col justify-center py-12"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, color-mix(in oklch, var(--primary) 7%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklch, var(--primary) 7%, transparent) 1px, transparent 1px)",
-            backgroundSize: "2.5rem 2.5rem",
-            maskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
-          }}
-        >
-          <div className="grid items-center gap-10 lg:grid-cols-2">
-            <div>
-              <LencanaAI>AI Conflict Predictor</LencanaAI>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                Sinkronisasi jadwal antar jurusan, tanpa bentrok.
-              </h1>
-              <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-                GIS membantu kurikulum menyusun, memplot guru, dan mempublikasikan jadwal pelajaran.
-                Potensi bentrok guru dan ruangan terdeteksi sejak plotting — lengkap dengan alternatif
-                solusi yang bisa dijelaskan dan dipertanggungjawabkan.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                <Link href="/login" className={buttonVariants({ size: "lg" })}>
-                  Masuk ke dashboard
-                  <ArrowRight className="ml-1.5 size-4" />
-                </Link>
-                <a href="#solusi" className={buttonVariants({ variant: "outline", size: "lg" })}>
-                  Lihat cara kerja AI
-                </a>
-              </div>
-              <p className="mt-4 text-xs text-muted-foreground">
-                Pilot project SMKN 4 Malang • Berbahasa Indonesia
-              </p>
-            </div>
-            <div className="min-w-0 space-y-3">
-              <IlustrasiGrid />
-              <KartuResolusi />
-            </div>
-          </div>
-        </section>
+      <main className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+        <LandingHero>
+          <IlustrasiGrid />
+          <KartuResolusi />
+        </LandingHero>
 
-        <Layar id="masalah">
+        <section id="masalah" className="scroll-mt-20 py-14">
           <div className="max-w-2xl">
             <Eyebrow>Masalah</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -389,14 +342,14 @@ export default function LandingPage() {
           </div>
           <ol className="mt-8 divide-y divide-border border-y border-border">
             {MASALAH.map((m, i) => (
-              <li key={m.judul} className="flex items-start gap-5 py-6">
+              <li key={m.judul} className="flex items-start gap-4 py-6 sm:gap-5">
                 <span
                   aria-hidden
-                  className="w-12 shrink-0 text-5xl font-semibold tabular-nums tracking-tight text-primary/15"
+                  className="w-10 shrink-0 text-4xl font-semibold tabular-nums tracking-tight text-primary/15 sm:w-12 sm:text-5xl"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-card)] bg-destructive/10">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-card)] bg-destructive/10 sm:size-11">
                   <m.icon className="size-5 text-destructive" />
                 </span>
                 <span className="min-w-0">
@@ -406,9 +359,9 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
-        </Layar>
+        </section>
 
-        <Layar id="solusi">
+        <section id="solusi" className="scroll-mt-20 py-14">
           <div className="max-w-2xl">
             <Eyebrow>Solusi AI</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -442,32 +395,32 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </Layar>
+        </section>
 
-        <Layar id="alur">
-          <div className="max-w-2xl">
-            <Eyebrow>Alur kerja</Eyebrow>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Dari data master sampai publikasi
-            </h2>
+        <section id="alur" className="scroll-mt-20 py-14">
+          <div className="flex max-w-2xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Eyebrow>Alur kerja</Eyebrow>
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+                Dari data master sampai publikasi
+              </h2>
+            </div>
+            <p className="shrink-0 text-xs text-muted-foreground">Geser untuk melihat semua tahap →</p>
           </div>
-          <ol className="relative mt-8 space-y-7 border-l-2 border-border pl-0 sm:ml-3">
+          <ol className="mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 lg:grid lg:grid-cols-6 lg:gap-0 lg:overflow-visible lg:rounded-[var(--radius-card)] lg:border lg:border-border lg:bg-card lg:pb-0 lg:divide-x lg:divide-border">
             {ALUR.map((a, i) => (
-              <li key={a.judul} className="relative pl-10">
-                <span
-                  aria-hidden
-                  className="absolute top-0 -left-[13px] flex size-6 items-center justify-center rounded-full border-2 border-background bg-primary text-[11px] font-bold tabular-nums text-primary-foreground"
-                >
-                  {i + 1}
-                </span>
-                <h3 className="text-base font-semibold tracking-tight">{a.judul}</h3>
-                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">{a.isi}</p>
+              <li key={a.judul} className="min-w-[220px] snap-start rounded-[var(--radius-card)] border border-border bg-card p-4 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-5">
+                <p className="font-mono text-xs font-semibold tabular-nums text-primary">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-2 text-sm font-semibold tracking-tight">{a.judul}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{a.isi}</p>
               </li>
             ))}
           </ol>
-        </Layar>
+        </section>
 
-        <Layar id="peran">
+        <section id="peran" className="scroll-mt-20 py-14">
           <div className="max-w-2xl">
             <Eyebrow>Peran</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -502,29 +455,27 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
-        </Layar>
+        </section>
 
-        <Layar id="faq">
-          <div className="max-w-2xl">
+        <section id="faq" className="scroll-mt-20 py-14">
+          <div className="mx-auto max-w-3xl">
             <Eyebrow>Tanya jawab</Eyebrow>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
               Yang sering ditanyakan
             </h2>
+            <div className="mt-8 divide-y divide-border rounded-[var(--radius-card)] border border-border bg-card px-5">
+              {FAQ.map((f) => (
+                <details key={f.tanya} className="group py-4">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                    {f.tanya}
+                    <ChevronDown className="size-4 shrink-0 text-primary transition-transform group-open:rotate-180" />
+                  </summary>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{f.jawab}</p>
+                </details>
+              ))}
+            </div>
           </div>
-          <div className="mt-8 grid gap-3 lg:grid-cols-2">
-            {FAQ.map((f) => (
-              <details
-                key={f.tanya}
-                className="group rounded-[var(--radius-card)] border border-border bg-card p-4 transition-colors open:border-primary/40 hover:border-primary/40"
-              >
-                <summary className="cursor-pointer text-sm font-semibold marker:text-primary">
-                  {f.tanya}
-                </summary>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.jawab}</p>
-              </details>
-            ))}
-          </div>
-        </Layar>
+        </section>
 
         <div className="py-14">
           <section className="rounded-[var(--radius-card)] border border-primary/15 bg-ai-muted p-6 sm:p-8">
@@ -547,7 +498,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-border">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-10 text-sm sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 text-sm sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] sm:px-6">
           <div>
             <p className="flex items-center gap-2">
               <Logo className="size-6" />
@@ -577,7 +528,7 @@ export default function LandingPage() {
           </nav>
         </div>
         <div className="border-t border-border">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-6 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p>© 2026 Grafika Intelligent Scheduling</p>
             <p>Dibangun untuk JHIC 2026 — Web Development</p>
           </div>
