@@ -218,8 +218,8 @@ export default function StyleGuidePage() {
           <div>
             <p className="text-[11px] text-muted-foreground">Body · 14px · Regular · 65ch</p>
             <p className="max-w-[65ch] text-sm leading-relaxed text-muted-foreground">
-              Tiga jurusan sudah mengumpulkan draf. Tugas kurikulum: plotting guru, minta AI memprediksi konflik, pilih
-              penyelesaian, lalu publikasi.
+              Tiga jurusan sudah mengumpulkan draf. Tugas kurikulum: plotting guru, minta AI memprediksi konflik, lalu pilih
+              penyelesaian.
             </p>
           </div>
           <div>
@@ -271,7 +271,7 @@ export default function StyleGuidePage() {
           </button>
           <AiBadge />
           <AiBadge>AI Resolve</AiBadge>
-          <Badge>Dipublikasikan</Badge>
+          <Badge>Bebas konflik</Badge>
           <Badge variant="secondary">Draf</Badge>
           <Badge variant="destructive">Ada konflik</Badge>
           <span

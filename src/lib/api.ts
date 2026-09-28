@@ -135,9 +135,6 @@ export const api = {
   getJadwalSemester: () => requestList<JadwalSemester>("/jadwal-semester"),
   getJadwalSemesterById: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}`),
   updateStatus: (id: string, status: string) => request<JadwalSemester>(`/jadwal-semester/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
-  publikasi: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}/publikasi`, { method: "POST" }),
-  batalkanPublikasi: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}/batalkan-publikasi`, { method: "POST" }),
-  cekKesiapan: (id: string) => request<{siap: boolean; pesan: string}>(`/jadwal-semester/${id}/kesiapan`),
 
   // Jurusan dalam jadwal semester
   tambahJurusan: (id: string, jurusanIds: string[]) =>

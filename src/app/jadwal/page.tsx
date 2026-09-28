@@ -15,12 +15,11 @@ import { useJadwal } from "@/lib/jadwal-context";
 import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
 import type { Semester } from "@/lib/types";
 
-function statusLabel(j: { status: string; bebas_konflik: boolean }, unplotted: number, konflik: number, validated: boolean) {
-  if (j.status === "dipublikasikan") return "Dipublikasikan";
+function statusLabel(unplotted: number, konflik: number, validated: boolean) {
   if (unplotted > 0) return "Plotting";
   if (!validated) return "Draf";
   if (konflik > 0) return "Tinjauan konflik";
-  return "Siap publikasi";
+  return "Bebas konflik";
 }
 
 export default function JadwalPage() {
@@ -160,10 +159,12 @@ export default function JadwalPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium">{jadwalSemesterLabel(j, semester)}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Status: {j.status}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Status: {statusLabel(unplot, konflikCount, val)}
+                      </p>
                     </div>
-                    <Badge variant={j.status === "dipublikasikan" ? "default" : "secondary"}>
-                      {statusLabel(j, unplot, konflikCount, val)}
+                    <Badge variant={val && konflikCount === 0 && unplot === 0 ? "default" : "secondary"}>
+                      {statusLabel(unplot, konflikCount, val)}
                     </Badge>
                   </div>
                   {isActive ? (

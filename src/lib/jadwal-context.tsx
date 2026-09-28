@@ -61,7 +61,6 @@ type JadwalStore = {
   mlPredicted: boolean;
   validating: boolean;
   predicting: boolean;
-  published: boolean;
   gridKelasId: string;
   selectedConflictId: string | null;
   openKonflik: Konflik[];
@@ -78,11 +77,9 @@ type JadwalStore = {
   runValidasi: () => Promise<void>;
   runPrediksiMl: () => Promise<void>;
   assignGuru: (slotId: string, guruId: string) => Promise<void>;
-  publish: () => Promise<{ ok: boolean; reason?: string }>;
   slotConflicts: (slotId: string) => Konflik[];
   teacherBusy: (guruId: string, hariId: string, jamId: string, exceptSlotId?: string) => boolean;
   teacherHoursOnDay: (guruId: string, hariId: string) => number;
-  publishedSlots: () => SlotJadwal[];
 };
 
 const JadwalContext = createContext<JadwalStore | null>(null);
@@ -102,8 +99,6 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const [predicting, setPredicting] = useState(false);
   const [gridKelasId, setGridKelasId] = useState("");
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
-
-  const published = jadwal?.status === "dipublikasikan";
 
   const setActiveJadwalId = useCallback((id: string) => {
     setActiveJadwalIdState(id);
@@ -189,15 +184,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
     const jsId = activeJadwalId ?? "";
     const plotDone = unplotted.length === 0;
     const resolveDone = validated && openKonflik.length === 0;
-    const current = !plotDone
-      ? "plot"
-      : !validated
-        ? "predict"
-        : !resolveDone
-          ? "resolve"
-          : !published
-            ? "publish"
-            : "publish";
+    const current = !plotDone ? "plot" : !validated ? "predict" : !resolveDone ? "resolve" : "";
 
     const status = (id: string, done: boolean): WorkflowStep["status"] => {
       if (done) return "done";
@@ -213,9 +200,8 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       { id: "plot", label: "Plotting guru", href: jsId ? `/jadwal/${jsId}?tab=plotting` : "/jadwal", status: status("plot", plotDone) },
       { id: "predict", label: "Cek konflik", href: konflikHref, status: status("predict", validated) },
       { id: "resolve", label: "Perbaiki konflik", href: konflikHref, status: status("resolve", resolveDone) },
-      { id: "publish", label: "Publikasi", href: jsId ? `/jadwal/${jsId}?tab=publikasi` : "/jadwal", status: status("publish", published) },
     ];
-  }, [activeJadwalId, unplotted.length, validated, openKonflik.length, published]);
+  }, [activeJadwalId, unplotted.length, validated, openKonflik.length]);
 
   const runValidasi = useCallback(async () => {
     if (!activeJadwalId) return;
@@ -253,35 +239,11 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
 
   const assignGuru = useCallback(
     async (slotId: string, guruId: string) => {
-      if (published) return;
       await api.tugaskanGuru(slotId, guruId);
       if (activeJadwalId) await loadSlotsFor(activeJadwalId);
     },
-    [published, activeJadwalId, loadSlotsFor]
+    [activeJadwalId, loadSlotsFor]
   );
-
-  const publish = useCallback(async () => {
-    if (!activeJadwalId) return { ok: false, reason: "Tidak ada jadwal aktif." };
-    if (unplotted.length > 0) {
-      return { ok: false, reason: `Masih ada ${unplotted.length} slot belum diplot guru.` };
-    }
-    if (!validated) {
-      return { ok: false, reason: "Jalankan validasi konflik sebelum publikasi." };
-    }
-    if (openKonflik.length > 0) {
-      return {
-        ok: false,
-        reason: `Masih ada ${openKonflik.length} konflik. Selesaikan dulu.`,
-      };
-    }
-    try {
-      const updated = await api.publikasi(activeJadwalId);
-      setJadwal(updated);
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, reason: e instanceof Error ? e.message : "Publikasi gagal" };
-    }
-  }, [activeJadwalId, unplotted.length, validated, openKonflik.length]);
 
   const createJadwal = useCallback(
     async (semesterId: string) => {
@@ -317,8 +279,6 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
     [slots]
   );
 
-  const publishedSlots = useCallback(() => (published ? slots : []), [published, slots]);
-
   const value = useMemo<JadwalStore>(
     () => ({
       loading,
@@ -335,7 +295,6 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       mlPredicted,
       validating,
       predicting,
-      published,
       gridKelasId,
       selectedConflictId,
       openKonflik,
@@ -352,11 +311,9 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       runValidasi,
       runPrediksiMl,
       assignGuru,
-      publish,
       slotConflicts,
       teacherBusy,
       teacherHoursOnDay,
-      publishedSlots,
     }),
     [
       loading,
@@ -373,7 +330,6 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       mlPredicted,
       validating,
       predicting,
-      published,
       gridKelasId,
       selectedConflictId,
       openKonflik,
@@ -388,11 +344,9 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       runValidasi,
       runPrediksiMl,
       assignGuru,
-      publish,
       slotConflicts,
       teacherBusy,
       teacherHoursOnDay,
-      publishedSlots,
     ]
   );
 
