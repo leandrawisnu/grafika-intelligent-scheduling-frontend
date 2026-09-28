@@ -7,6 +7,7 @@ import {
   BookOpen,
   Calendar,
   Building2,
+  ChevronDown,
   Clock,
   DoorOpen,
   GraduationCap,
@@ -22,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSesi } from "@/lib/sesi-context";
 import { useJadwal } from "@/lib/jadwal-context";
+import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
 import { jadwalDetailHref, jadwalKonflikHref } from "@/lib/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -135,18 +137,19 @@ function MasterNavItem({
   );
 }
 
-function SchoolContextCard() {
-  const { activeJadwalId, semesterLabel } = useJadwal();
+const navItemClass =
+  "relative h-10 gap-3 rounded-full px-3 text-sm font-medium text-muted-foreground";
 
-  const periodLine = activeJadwalId
-    ? `Nickname: Grafika · ${semesterLabel}`
-    : "Belum ada jadwal semester aktif";
+function SchoolContextCard({ variant }: { variant: "card" | "icon" }) {
+  const { activeJadwalId, semesterLabel, jadwalList, loadJadwal } = useJadwal();
+  const [open, setOpen] = useState(false);
+  const canPick = jadwalList.length > 0;
+  const periodLine = activeJadwalId ? semesterLabel : "Belum ada jadwal semester aktif";
+  const shellClass =
+    "mx-1 flex w-[calc(100%-0.5rem)] items-start rounded-[var(--radius-card)] border border-sidebar-border bg-card p-3 outline-none";
 
-  return (
-    <div
-      className="mx-1 flex w-[calc(100%-0.5rem)] items-start gap-3 rounded-[var(--radius-card)] border border-sidebar-border bg-card p-3"
-      aria-label="Konteks sekolah dan semester aktif"
-    >
+  const card = (
+    <span className="flex min-w-0 flex-1 items-start gap-3 text-left">
       <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
         <GraduationCap className="size-5" aria-hidden />
       </span>
@@ -154,7 +157,124 @@ function SchoolContextCard() {
         <span className="block truncate text-sm font-semibold text-foreground">SMKN 4 Malang</span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">{periodLine}</span>
       </span>
-    </div>
+      {canPick ? (
+        <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
+      ) : null}
+    </span>
+  );
+
+  const menu = (
+    <SidebarGroup className="py-1">
+      <SidebarMenu className={sidebarMenuGap}>
+        <SidebarMenuItem className="px-1">
+          {canPick ? (
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger
+                render={
+                  <SidebarMenuButton
+                    type="button"
+                    tooltip={periodLine}
+                    aria-label={`Pilih semester aktif. ${periodLine}`}
+                    aria-expanded={open}
+                    className={cn(navItemClass, "text-primary")}
+                  />
+                }
+              >
+                <GraduationCap className="size-[18px] text-primary" />
+                <span className="flex-1">{periodLine}</span>
+              </PopoverTrigger>
+              <PopoverContent
+                side="right"
+                align="start"
+                sideOffset={8}
+                className="z-[200] w-64 gap-0.5 p-1.5"
+              >
+                {jadwalList.map((item) => {
+                  const label = jadwalSemesterLabel(item);
+                  const active = item.id === activeJadwalId;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={cn(
+                        "flex w-full rounded-md px-2 py-1.5 text-left text-sm",
+                        active ? "bg-primary/10 font-medium text-primary" : "hover:bg-muted",
+                      )}
+                      onClick={() => {
+                        setOpen(false);
+                        if (item.id !== activeJadwalId) void loadJadwal(item.id);
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <SidebarMenuButton type="button" tooltip={periodLine} className={navItemClass}>
+              <GraduationCap className="size-[18px] text-muted-foreground/80" />
+              <span className="flex-1">{periodLine}</span>
+            </SidebarMenuButton>
+          )}
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+
+  if (variant === "icon") return menu;
+
+  if (!canPick) {
+    return (
+      <div className={shellClass} aria-label="Konteks sekolah dan semester aktif" title={periodLine}>
+        {card}
+      </div>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className={cn(shellClass, "hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-sidebar-ring")}
+            aria-label={`Pilih semester aktif. ${periodLine}`}
+            aria-expanded={open}
+            title={periodLine}
+          />
+        }
+      >
+        {card}
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        sideOffset={8}
+        className="z-[200] w-64 gap-0.5 p-1.5"
+      >
+        {jadwalList.map((item) => {
+          const label = jadwalSemesterLabel(item);
+          const active = item.id === activeJadwalId;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={cn(
+                "flex w-full rounded-md px-2 py-1.5 text-left text-sm",
+                active ? "bg-primary/10 font-medium text-primary" : "hover:bg-muted",
+              )}
+              onClick={() => {
+                setOpen(false);
+                if (item.id !== activeJadwalId) void loadJadwal(item.id);
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -412,11 +532,16 @@ export function AppSidebar() {
             </span>
           </span>
         </Link>
-        <SidebarSeparator className="mx-1" />
-        <SchoolContextCard />
+        <div className="flex flex-col gap-3 group-data-[collapsible=icon]:hidden">
+          <SidebarSeparator className="mx-1" />
+          <SchoolContextCard variant="card" />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="gap-3 px-1">
+        <div className="hidden w-full group-data-[collapsible=icon]:block">
+          <SchoolContextCard variant="icon" />
+        </div>
         {sesi?.peran === "koor_jurusan" ? <KoorSidebarNav /> : <KurikulumSidebarNav />}
       </SidebarContent>
 

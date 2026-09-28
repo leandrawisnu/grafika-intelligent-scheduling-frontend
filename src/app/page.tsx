@@ -26,7 +26,6 @@ export default function Dashboard() {
     errorCount,
     warningCount,
     unplotted,
-    published,
     runValidasi,
     setSelectedConflictId,
     jadwal,
@@ -63,13 +62,11 @@ export default function Dashboard() {
   const konflikHref = jadwalKonflikHref(activeJadwalId);
   const currentStep = steps.find((s) => s.status === "current");
 
-  const insightTitle = published
-    ? `${semesterLabel} sudah dipublikasikan`
-    : !validated
-      ? "Validasi konflik belum dijalankan"
-      : openKonflik.length === 0
-        ? "Tidak ada konflik terbuka. Siap publikasi."
-        : `${openKonflik.length} konflik menunggu keputusan kurikulum`;
+  const insightTitle = !validated
+    ? "Validasi konflik belum dijalankan"
+    : openKonflik.length === 0
+      ? "Tidak ada konflik terbuka."
+      : `${openKonflik.length} konflik menunggu keputusan kurikulum`;
 
   const insightDetail = !validated
     ? "Validasi memeriksa bentrok guru, ruangan, dan aturan jam dari database."
@@ -90,7 +87,7 @@ export default function Dashboard() {
           <p className="text-xs font-semibold tracking-wide text-primary/80">{semesterLabel}</p>
           <h1 className="gis-page-title mt-1">Beranda</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Alur kurikulum: plotting guru, validasi konflik, publikasi ke guru dan siswa.
+            Alur kurikulum: plotting guru, lalu validasi dan perbaikan konflik.
           </p>
         </div>
         {currentStep ? (
@@ -118,11 +115,6 @@ export default function Dashboard() {
         ) : openKonflik.length > 0 ? (
           <Link href={konflikHref} className={buttonVariants()}>
             Tinjau konflik
-            <ArrowRight className="ml-1.5 size-4" />
-          </Link>
-        ) : !published && activeJadwalId ? (
-          <Link href={`${jsHref}?tab=publikasi`} className={buttonVariants()}>
-            Ke publikasi
             <ArrowRight className="ml-1.5 size-4" />
           </Link>
         ) : null}

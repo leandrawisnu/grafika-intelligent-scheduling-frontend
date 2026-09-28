@@ -136,13 +136,7 @@ function statusTeks(status: StatusImpor) {
   return "Perlu pilihan";
 }
 
-export function ImporJadwalDialog({
-  jadwalId,
-  disabled,
-}: {
-  jadwalId: string;
-  disabled: boolean;
-}) {
+export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
   const catalog = useCatalog();
   const { jadwal, loadJadwal } = useJadwal();
   const [open, setOpen] = useState(false);
@@ -272,7 +266,7 @@ export function ImporJadwalDialog({
 
   return (
     <>
-      <Button type="button" variant="outline" disabled={disabled} onClick={() => ubahBuka(true)}>
+      <Button type="button" variant="outline" onClick={() => ubahBuka(true)}>
         <Upload className="mr-1.5 size-4" />
         Unggah jadwal
       </Button>

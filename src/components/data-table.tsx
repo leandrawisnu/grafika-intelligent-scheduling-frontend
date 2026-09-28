@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, Filter, Pencil, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,17 @@ interface Column {
   align?: "left" | "right" | "center";
 }
 
+const PAGE_SIZE = 10;
+
+interface ServerPaging {
+  page: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onSearchChange: (query: string) => void;
+  onSortChange: (sort: string) => void;
+  onFilterChange: (filters: Record<string, string>) => void;
+}
+
 interface DataTableProps {
   columns: Column[];
   data: Record<string, unknown>[];
@@ -44,6 +55,7 @@ interface DataTableProps {
   getSearchText?: (row: Record<string, unknown>) => string;
   onEdit?: (row: Record<string, unknown>) => void;
   onDelete?: (row: Record<string, unknown>) => void;
+  serverPaging?: ServerPaging;
 }
 
 function cellText(value: unknown, row: Record<string, unknown>, col: Column): string {
@@ -117,13 +129,24 @@ export function DataTable({
   getSearchText,
   onEdit,
   onDelete,
+  serverPaging,
 }: DataTableProps) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query);
   const [sort, setSort] = useState(sortOptions[0]?.value ?? "default");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [page, setPage] = useState(1);
+  const sentSearch = useRef("");
+
+  useEffect(() => {
+    if (!serverPaging) return;
+    if (debouncedQuery === sentSearch.current) return;
+    sentSearch.current = debouncedQuery;
+    serverPaging.onSearchChange(debouncedQuery);
+  }, [debouncedQuery, serverPaging]);
 
   const rows = useMemo(() => {
+    if (serverPaging) return data;
     const q = debouncedQuery.trim().toLowerCase();
     let next = [...data];
 
@@ -145,7 +168,26 @@ export function DataTable({
     }
 
     return next;
-  }, [columns, data, debouncedQuery, filterValues, filters, getSearchText, sort]);
+  }, [columns, data, debouncedQuery, filterValues, filters, getSearchText, serverPaging, sort]);
+
+  const total = serverPaging ? serverPaging.total : rows.length;
+  const currentPage = serverPaging ? serverPaging.page : page;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, currentPage), pageCount);
+  const visibleRows = serverPaging
+    ? rows
+    : rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    if (serverPaging) return;
+    setPage(1);
+  }, [debouncedQuery, filterValues, serverPaging, sort]);
+
+  const goToPage = (next: number) => {
+    const bounded = Math.min(Math.max(1, next), pageCount);
+    if (serverPaging) serverPaging.onPageChange(bounded);
+    else setPage(bounded);
+  };
 
   const colSpan = columns.length + (onEdit || onDelete ? 1 : 0);
   const hasActiveSearch = debouncedQuery.trim().length > 0;
@@ -155,7 +197,14 @@ export function DataTable({
     <div className="gis-panel overflow-hidden">
       <div className="border-b border-border/80 bg-card px-4 py-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Select value={sort} onValueChange={(v) => v && setSort(v)}>
+          <Select
+            value={sort}
+            onValueChange={(v) => {
+              if (!v) return;
+              setSort(v);
+              serverPaging?.onSortChange(v);
+            }}
+          >
             <SelectTrigger
               size="sm"
               className={cn(
@@ -188,10 +237,12 @@ export function DataTable({
               value={selectValue}
               onValueChange={(value) => {
                 if (!value) return;
-                setFilterValues((prev) => ({
-                  ...prev,
+                const next = {
+                  ...filterValues,
                   [filter.key]: value === ALL_FILTER ? "" : value,
-                }));
+                };
+                setFilterValues(next);
+                serverPaging?.onFilterChange(next);
               }}
             >
               <SelectTrigger
@@ -259,7 +310,7 @@ export function DataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length === 0 ? (
+            {visibleRows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={colSpan} className="px-4 py-12 text-center">
                   <p className="text-sm font-medium text-foreground">
@@ -275,7 +326,7 @@ export function DataTable({
                 </TableCell>
               </TableRow>
             ) : (
-              rows.map((row, i) => (
+              visibleRows.map((row, i) => (
                 <TableRow
                   key={String(row.id ?? i)}
                   className={cn(
@@ -333,6 +384,36 @@ export function DataTable({
           </TableBody>
         </Table>
       </div>
+      {total > PAGE_SIZE ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/80 px-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, total)} dari {total}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={safePage <= 1}
+              onClick={() => goToPage(safePage - 1)}
+            >
+              Sebelumnya
+            </Button>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {safePage} / {pageCount}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={safePage >= pageCount}
+              onClick={() => goToPage(safePage + 1)}
+            >
+              Berikutnya
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

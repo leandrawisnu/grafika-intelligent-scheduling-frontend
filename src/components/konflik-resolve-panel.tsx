@@ -10,7 +10,7 @@ import type { Konflik } from "@/lib/types";
 import { useJadwal } from "@/lib/jadwal-context";
 
 export function KonflikResolvePanel({ konflik }: { konflik: Konflik }) {
-  const { published, activeJadwalId, loadJadwal } = useJadwal();
+  const { activeJadwalId, loadJadwal } = useJadwal();
   const [loading, setLoading] = useState(false);
   const [mlError, setMlError] = useState<string | null>(null);
   const [alternatif, setAlternatif] = useState<unknown[] | null>(null);
@@ -54,7 +54,7 @@ export function KonflikResolvePanel({ konflik }: { konflik: Konflik }) {
         </p>
       </div>
 
-      <Button variant="outline" onClick={() => void fetchMl()} disabled={loading || published}>
+      <Button variant="outline" onClick={() => void fetchMl()} disabled={loading}>
         <Sparkles className="mr-1.5 size-4" />
         {loading ? "Meminta alternatif…" : "Minta alternatif ML"}
       </Button>
@@ -80,7 +80,6 @@ export function KonflikResolvePanel({ konflik }: { konflik: Konflik }) {
           variant="secondary"
           size="sm"
           onClick={() => void loadJadwal(activeJadwalId)}
-          disabled={published}
         >
           Muat ulang konflik
         </Button>

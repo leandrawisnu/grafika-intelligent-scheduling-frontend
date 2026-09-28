@@ -46,7 +46,7 @@ export const QUERY_BANK: QueryAnswer[] = [
     id: "publikasi-dkv",
     keywords: ["mengapa", "belum", "publikasi", "dkv", "dipublikasikan"],
     answer:
-      "Jadwal XI DKV belum dapat dipublikasikan karena semester ini masih punya konflik lintas jurusan. Publikasi dikunci sampai seluruh konflik terselesaikan, bukan hanya kelas DKV.",
+      "Jadwal XI DKV tetap tampil. Semester ini masih punya konflik lintas jurusan yang perlu diperbaiki, bukan hanya di kelas DKV.",
     list: [
       "Ahmad Fauzi bentrok Senin jam ke-3 (DKV × MM).",
       "Lab Komputer 1 dobel Selasa jam ke-2 (DKV × PG).",

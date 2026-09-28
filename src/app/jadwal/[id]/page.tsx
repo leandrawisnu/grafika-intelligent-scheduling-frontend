@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Send, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,7 +26,8 @@ function JadwalDetailInner() {
   const jadwalId = params.id as string;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") ?? "grid";
+  const rawTab = searchParams.get("tab") ?? "grid";
+  const tab = rawTab === "publikasi" ? "grid" : rawTab;
   const catalog = useCatalog();
   const {
     loadJadwal,
@@ -40,12 +41,10 @@ function JadwalDetailInner() {
     validated,
     validating,
     predicting,
-    published,
     openKonflik,
     unplotted,
     runValidasi,
     runPrediksiMl,
-    publish,
     selectedConflictId,
     setSelectedConflictId,
     openKonflik: openList,
@@ -63,11 +62,6 @@ function JadwalDetailInner() {
     else params.set("tab", value);
     const q = params.toString();
     router.replace(q ? `/jadwal/${jadwalId}?${q}` : `/jadwal/${jadwalId}`);
-  };
-
-  const handlePublish = async () => {
-    const result = await publish();
-    if (!result.ok && result.reason) setTab("publikasi");
   };
 
   const [altJadwalId, setAltJadwalId] = useState<string | null>(null);
@@ -119,9 +113,6 @@ function JadwalDetailInner() {
         <div>
           <h1 className="gis-page-title">{semesterLabel}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge variant={published ? "default" : "secondary"}>
-              {published ? "Dipublikasikan" : "Belum dipublikasikan"}
-            </Badge>
             {validated ? (
               <Badge variant={openKonflik.length === 0 ? "secondary" : "destructive"}>
                 {openKonflik.length === 0 ? "Bebas konflik" : `${openKonflik.length} konflik`}
@@ -132,20 +123,13 @@ function JadwalDetailInner() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <ImporJadwalDialog jadwalId={jadwalId} disabled={published} />
-          <Button variant="outline" onClick={() => void runValidasi()} disabled={validating || published}>
+          <ImporJadwalDialog jadwalId={jadwalId} />
+          <Button variant="outline" onClick={() => void runValidasi()} disabled={validating}>
             {validating ? "Memvalidasi…" : validated ? "Validasi ulang" : "Validasi konflik"}
           </Button>
-          <Button variant="outline" onClick={() => void runPrediksiMl()} disabled={predicting || published}>
+          <Button variant="outline" onClick={() => void runPrediksiMl()} disabled={predicting}>
             <Sparkles className="mr-1.5 size-4" />
             {predicting ? "ML…" : "Prediksi ML (opsional)"}
-          </Button>
-          <Button
-            onClick={() => void handlePublish()}
-            disabled={published || openKonflik.length > 0 || !validated || unplotted.length > 0}
-          >
-            <Send className="mr-1.5 size-4" />
-            Publikasi
           </Button>
         </div>
       </div>
@@ -168,7 +152,6 @@ function JadwalDetailInner() {
             Plotting {unplotted.length > 0 ? `(${unplotted.length})` : ""}
           </TabsTrigger>
           <TabsTrigger value="konflik">Konflik</TabsTrigger>
-          <TabsTrigger value="publikasi">Publikasi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="grid" className="space-y-4">
@@ -240,37 +223,6 @@ function JadwalDetailInner() {
             <KonflikResolvePanel konflik={selected} />
           ) : (
             <p className="text-sm text-muted-foreground">Tidak ada konflik terbuka.</p>
-          )}
-        </TabsContent>
-
-        <TabsContent value="publikasi" className="space-y-4">
-          {published ? (
-            <div className="rounded-[var(--radius-card)] border border-border bg-secondary px-4 py-6 text-sm">
-              Jadwal sudah dipublikasikan. Guru/siswa melihat versi terbit.
-            </div>
-          ) : openKonflik.length > 0 || !validated || unplotted.length > 0 ? (
-            <AiInsightBar
-              title="Publikasi dikunci"
-              detail={
-                !validated
-                  ? "Jalankan validasi konflik dulu."
-                  : unplotted.length > 0
-                    ? `${unplotted.length} slot belum punya guru.`
-                    : `Masih ada ${openKonflik.length} konflik.`
-              }
-            >
-              <Link href={konflikHref} className={buttonVariants({ size: "sm" })}>
-                Buka tab konflik
-              </Link>
-            </AiInsightBar>
-          ) : (
-            <div className="space-y-3 rounded-[var(--radius-card)] border border-border bg-secondary px-4 py-6">
-              <p className="text-sm font-medium">Tidak ada konflik. Jadwal boleh dipublikasikan.</p>
-              <Button onClick={() => void handlePublish()}>
-                <Send className="mr-1.5 size-4" />
-                Publikasikan sekarang
-              </Button>
-            </div>
           )}
         </TabsContent>
       </Tabs>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export function PlottingPanel() {
   const catalog = useCatalog();
-  const { unplotted, assignGuru, teacherBusy, teacherHoursOnDay, published } = useJadwal();
+  const { unplotted, assignGuru, teacherBusy, teacherHoursOnDay } = useJadwal();
 
   if (unplotted.length === 0) {
     return (
@@ -48,7 +48,7 @@ export function PlottingPanel() {
                   const hours = teacherHoursOnDay(guru.id, slot.hari_id);
                   const maxDay = Math.max(1, Math.ceil(guru.jam_maksimal_per_minggu / 5));
                   const over = hours >= maxDay;
-                  const blocked = busy || over || published;
+                  const blocked = busy || over;
                   const reason = busy
                     ? "Bentrok jam ini"
                     : over

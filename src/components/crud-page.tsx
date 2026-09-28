@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
+import type { TableQuery } from "@/lib/api";
 import { formatDateId, normalizeApiDateField } from "@/lib/dates";
 import { resolveFkLabel } from "@/lib/display-labels";
 import {
@@ -61,7 +62,7 @@ interface CRUDPageProps {
   editDialogTitle?: string;
   onDialogOpen?: () => void;
   fields: Field[];
-  fetchData: () => Promise<any[]>;
+  fetchData: (query: TableQuery) => Promise<{ data: any[]; total: number; page: number; per_page: number }>;
   onCreate: (data: any) => Promise<any>;
   onUpdate: (id: string, data: any) => Promise<any>;
   onDelete: (id: string) => Promise<any>;
@@ -124,6 +125,11 @@ export function CRUDPage({
   getInitialData,
 }: CRUDPageProps) {
   const [data, setData] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("default");
+  const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -133,23 +139,37 @@ export function CRUDPage({
   const [saving, setSaving] = useState(false);
   const [optionsKey, setOptionsKey] = useState("");
 
+  const filterKey = JSON.stringify(activeFilters);
+  const sawData = useRef(false);
+
   const load = async () => {
-    setLoading(true);
+    if (!sawData.current) setLoading(true);
     setLoadError(null);
     try {
-      const result = await fetchData();
-      setData(Array.isArray(result) ? result : []);
+      const result = await fetchData({ page, q: search, sort, filters: activeFilters });
+      const perPage = result.per_page || 10;
+      const lastPage = Math.max(1, Math.ceil((result.total || 0) / perPage));
+      if (page > lastPage) {
+        setPage(lastPage);
+        return;
+      }
+      setData(Array.isArray(result.data) ? result.data : []);
+      setTotal(result.total || 0);
     } catch (err) {
       setData([]);
+      setTotal(0);
       setLoadError(err instanceof Error ? err.message : "Gagal memuat data");
     } finally {
+      sawData.current = true;
       setLoading(false);
     }
   };
 
   useEffect(() => {
     void load();
-  }, []);
+    // fetchData is stable enough for master pages; query state drives reloads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search, sort, filterKey]);
 
   const formFromRow = (row: Record<string, unknown>) => {
     const next: Record<string, unknown> = {};
@@ -342,6 +362,23 @@ export function CRUDPage({
           data={data}
           onEdit={openEdit}
           onDelete={handleDelete}
+          serverPaging={{
+            page,
+            total,
+            onPageChange: setPage,
+            onSearchChange: (q) => {
+              setPage(1);
+              setSearch(q);
+            },
+            onSortChange: (next) => {
+              setPage(1);
+              setSort(next);
+            },
+            onFilterChange: (next) => {
+              setPage(1);
+              setActiveFilters(next);
+            },
+          }}
         />
       )}
 

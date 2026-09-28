@@ -14,7 +14,7 @@ export default function MataPelajaranPage() {
         { key: "jam_wajib_per_minggu", label: "Jam/Minggu", type: "number" },
         { key: "tingkat", label: "Tingkat (10/11/12)", type: "number" },
       ]}
-      fetchData={api.getMataPelajaran}
+      fetchData={api.listMataPelajaran}
       onCreate={(d) => api.createMataPelajaran(d)}
       onUpdate={(id, d) => api.updateMataPelajaran(id, d)}
       onDelete={(id) => api.deleteMataPelajaran(id)}

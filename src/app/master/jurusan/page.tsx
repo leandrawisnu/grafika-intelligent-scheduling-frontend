@@ -12,7 +12,7 @@ export default function JurusanPage() {
         { key: "kode", label: "Kode Jurusan" },
         { key: "nama", label: "Nama Jurusan" },
       ]}
-      fetchData={api.getJurusan}
+      fetchData={api.listJurusan}
       onCreate={(d) => api.createJurusan(d)}
       onUpdate={(id, d) => api.updateJurusan(id, d)}
       onDelete={(id) => api.deleteJurusan(id)}
