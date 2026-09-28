@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CRUDPage } from "@/components/crud-page";
-import { api } from "@/lib/api";
+import { api, type TableQuery } from "@/lib/api";
+import { useJadwal } from "@/lib/jadwal-context";
 import type { Jurusan, Semester } from "@/lib/types";
 
 function kelasPayload(form: Record<string, unknown>) {
@@ -18,6 +19,8 @@ function kelasPayload(form: Record<string, unknown>) {
 }
 
 export default function KelasPage() {
+  const { jadwal } = useJadwal();
+  const semesterAktifId = jadwal?.semester_id ?? "";
   const [jurusan, setJurusan] = useState<Jurusan[]>([]);
   const [semester, setSemester] = useState<Semester[]>([]);
 
@@ -56,12 +59,22 @@ export default function KelasPage() {
     [jurusan, semester, jurusanOptions, semesterOptions]
   );
 
+  const fetchKelas = (query: TableQuery) =>
+    api.listKelas({
+      ...query,
+      filters: {
+        ...query.filters,
+        ...(semesterAktifId ? { semester_id: semesterAktifId } : {}),
+      },
+    });
+
   return (
     <CRUDPage
+      key={semesterAktifId || "semua"}
       title="Kelas"
       description="Kelola data kelas"
       fields={fields}
-      fetchData={() => api.getKelas()}
+      fetchData={fetchKelas}
       onCreate={(d) => {
         const p = kelasPayload(d);
         if (!p.semester_id) throw new Error("Pilih semester");
@@ -84,7 +97,7 @@ export default function KelasPage() {
         nama: "",
         tingkat: 10,
         jurusan_id: jurusanOptions[0]?.value ?? "",
-        semester_id: semesterOptions[0]?.value ?? "",
+        semester_id: semesterAktifId || semesterOptions[0]?.value || "",
       })}
     />
   );

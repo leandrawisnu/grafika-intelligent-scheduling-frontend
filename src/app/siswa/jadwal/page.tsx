@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ScheduleGrid } from "@/components/schedule-grid";
 import { useCatalog } from "@/lib/catalog-context";
@@ -11,24 +11,31 @@ import { cn } from "@/lib/utils";
 export default function SiswaJadwalPage() {
   const router = useRouter();
   const catalog = useCatalog();
-  const { published, slots, activeJadwalId } = useJadwal();
+  const { slots, activeJadwalId, jadwal } = useJadwal();
   const { viewKelasId, setViewKelasId, setRole } = usePrototype();
+  const kelasSemester = useMemo(
+    () =>
+      catalog.kelas.filter(
+        (item) => !jadwal?.semester_id || item.semester_id === jadwal.semester_id,
+      ),
+    [catalog.kelas, jadwal?.semester_id],
+  );
 
   useEffect(() => {
-    if (!viewKelasId && catalog.kelas[0]) setViewKelasId(catalog.kelas[0].id);
-  }, [catalog.kelas, viewKelasId, setViewKelasId]);
+    if (!kelasSemester.some((item) => item.id === viewKelasId)) {
+      setViewKelasId(kelasSemester[0]?.id ?? "");
+    }
+  }, [kelasSemester, viewKelasId, setViewKelasId]);
 
-  const kelas = catalog.kelas.find((k) => k.id === viewKelasId) ?? catalog.kelas[0];
-  const displaySlots = published ? slots : [];
+  const kelas = kelasSemester.find((item) => item.id === viewKelasId) ?? kelasSemester[0];
+  const displaySlots = slots;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="gis-page-title">Jadwal pelajaran</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {published
-            ? "Versi terbit untuk kelas yang dipilih."
-            : "Menunggu publikasi kurikulum."}
+          Jadwal pelajaran untuk kelas yang dipilih.
         </p>
       </div>
       {!activeJadwalId ? (
@@ -36,7 +43,7 @@ export default function SiswaJadwalPage() {
       ) : (
         <>
           <div className="flex flex-wrap gap-1.5">
-            {catalog.kelas.map((item) => (
+            {kelasSemester.map((item) => (
               <button
                 key={item.id}
                 type="button"
