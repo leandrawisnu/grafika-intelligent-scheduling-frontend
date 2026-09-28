@@ -23,7 +23,7 @@ export default function TahunAjaranPage() {
           required: true,
         },
       ]}
-      fetchData={api.getTahunAjaran}
+      fetchData={api.listTahunAjaran}
       onCreate={(d) => api.createTahunAjaran(d)}
       onUpdate={(id, d) => api.updateTahunAjaran(id, d)}
       onDelete={(id) => api.deleteTahunAjaran(id)}

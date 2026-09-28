@@ -13,7 +13,7 @@ export default function GuruPage() {
         { key: "nama_lengkap", label: "Nama Lengkap" },
         { key: "jam_maksimal_per_minggu", label: "Jam Maksimal/Minggu", type: "number" },
       ]}
-      fetchData={api.getGuru}
+      fetchData={api.listGuru}
       onCreate={(d) => api.createGuru(d)}
       onUpdate={(id, d) => api.updateGuru(id, d)}
       onDelete={(id) => api.deleteGuru(id)}

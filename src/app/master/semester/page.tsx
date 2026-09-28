@@ -78,7 +78,7 @@ export default function SemesterPage() {
       dialogHint="Pilih tahun ajaran yang sudah dibuat di menu Tahun ajaran."
       onDialogOpen={loadTahun}
       fields={fields}
-      fetchData={api.getSemester}
+      fetchData={api.listSemester}
       onCreate={async (d) => {
         const p = d as Record<string, unknown>;
         if (!p.tahun_ajaran_id) throw new Error("Pilih tahun ajaran");
