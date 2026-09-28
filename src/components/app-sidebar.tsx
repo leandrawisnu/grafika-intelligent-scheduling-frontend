@@ -290,10 +290,11 @@ function KurikulumSidebarNav() {
   const konflikActive =
     pathname.startsWith("/ai/konflik") ||
     pathname.startsWith("/ai/selesaikan") ||
+    /\/jadwal\/[^/]+\/konflik/.test(pathname) ||
     (pathname.startsWith("/jadwal/") && searchParams.get("tab") === "konflik");
 
   const jadwalActive =
-    pathname === "/jadwal" || (pathname.startsWith("/jadwal/") && searchParams.get("tab") !== "konflik");
+    (pathname === "/jadwal" || pathname.startsWith("/jadwal/")) && !konflikActive;
 
   const tanyaActive = pathname.startsWith("/ai/tanya");
 

@@ -12,6 +12,7 @@ import {
 import { api } from "@/lib/api";
 import { konflikToListItem, type ConflictListItem } from "@/lib/conflict-display";
 import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
+import { jadwalKonflikHref } from "@/lib/navigation";
 import type { JadwalKelas, JadwalSemester, Konflik, SlotJadwal } from "@/lib/types";
 import type { WorkflowStep } from "@/lib/prototype-types";
 
@@ -192,7 +193,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       return "todo";
     };
 
-    const konflikHref = jsId ? `/jadwal/${jsId}?tab=konflik` : "/jadwal";
+    const konflikHref = jadwalKonflikHref(jsId || null);
 
     return [
       { id: "master", label: "Data master", href: "/master", status: "done" },

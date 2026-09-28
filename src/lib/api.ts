@@ -192,7 +192,10 @@ export const api = {
 
   // AI
   selesaikanKonflik: (konflikId: string) =>
-    request<{alternatif: any[]}>(`/konflik/${konflikId}/selesaikan`, { method: "POST" }),
+    request<{ alternatif: { id: string; peringkat: number; label: string; penjelasan: string }[] }>(
+      `/konflik/${konflikId}/selesaikan`,
+      { method: "POST" },
+    ),
   getResolusi: (konflikId: string) => request<any[]>(`/konflik/${konflikId}/resolusi`),
   terimaResolusi: (resolusiId: string) => request<{status: string}>(`/resolusi/${resolusiId}/terima`, { method: "POST" }),
   jelaskanKonflik: (konflikId: string) => request<any>(`/konflik/${konflikId}/jelaskan`, { method: "POST" }),
