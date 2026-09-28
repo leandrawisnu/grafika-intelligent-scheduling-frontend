@@ -21,6 +21,7 @@ export function ScheduleGrid({
   hideBreaks = true,
   embedded = false,
   showFooter = true,
+  showAllInCell = false,
   onSlotClick,
 }: {
   kelasId?: string | null;
@@ -32,6 +33,7 @@ export function ScheduleGrid({
   hideBreaks?: boolean;
   embedded?: boolean;
   showFooter?: boolean;
+  showAllInCell?: boolean;
   onSlotClick?: (slot: SlotJadwal, conflicts: Konflik[]) => void;
 }) {
   const catalog = useCatalog();
@@ -147,7 +149,7 @@ export function ScheduleGrid({
               </th>
               {displayHari.map((hari) => {
                 const cellSlots = at(hari.id, jam.id);
-                const showAggregate = !focused && cellSlots.length > 1;
+                const showAggregate = !showAllInCell && !focused && cellSlots.length > 1;
                 return (
                   <td
                     key={hari.id}

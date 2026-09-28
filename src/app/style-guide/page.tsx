@@ -247,9 +247,6 @@ export default function StyleGuidePage() {
           <Button variant="destructive" data-component="GIS/Button/Destructive">
             Hapus
           </Button>
-          <Button disabled data-component="GIS/Button/Disabled">
-            Publikasi
-          </Button>
         </div>
       </Section>
 

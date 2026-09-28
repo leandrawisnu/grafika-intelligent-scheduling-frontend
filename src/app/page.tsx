@@ -150,7 +150,7 @@ export default function Dashboard() {
           <GisSectionHeading title="Hasil validasi" />
           {!validated ? (
             <GisPanel className="px-4 py-6 text-sm text-muted-foreground">
-              Grid belum menandai konflik sampai validasi dijalankan.
+              Bentrok tampil di AI Conflict Predictor setelah validasi dijalankan.
             </GisPanel>
           ) : (
             <GisPanel className="p-3">
@@ -158,7 +158,7 @@ export default function Dashboard() {
                 items={conflictItems}
                 onSelect={(id) => {
                   setSelectedConflictId(id);
-                  router.push(konflikHref);
+                  router.push(`${konflikHref}?pilih=${id}`);
                 }}
               />
             </GisPanel>

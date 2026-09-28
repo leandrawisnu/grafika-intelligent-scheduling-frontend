@@ -1,6 +1,6 @@
-/** Deep link ke tab konflik jadwal aktif (atau daftar jadwal). */
+/** Deep link ke halaman daftar konflik jadwal aktif. */
 export function jadwalKonflikHref(activeJadwalId: string | null | undefined): string {
-  return activeJadwalId ? `/jadwal/${activeJadwalId}?tab=konflik` : "/jadwal";
+  return activeJadwalId ? `/jadwal/${activeJadwalId}/konflik` : "/jadwal";
 }
 
 export function jadwalDetailHref(activeJadwalId: string | null | undefined): string {
