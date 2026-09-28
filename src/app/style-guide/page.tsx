@@ -9,8 +9,17 @@ import { AiBadge } from "@/components/ai-badge";
 import { AiInsightBar } from "@/components/ai-insight-bar";
 import { ConflictList } from "@/components/conflict-list";
 import { ResolvePanel } from "@/components/resolve-panel";
+import { DataTable } from "@/components/data-table";
 import { INITIAL_CONFLICTS } from "@/lib/mock";
+import type { ConflictListItem } from "@/lib/conflict-display";
 import { cn } from "@/lib/utils";
+import {
+  buildTableFilters,
+  TABLE_SEARCH_PLACEHOLDER,
+  buildTableSortOptions,
+  columnSortType,
+  rowSearchText,
+} from "@/lib/table-controls";
 
 const SWATCHES = [
   { name: "Cool Sheet", token: "--background", hex: "#F7FBFE", use: "Canvas halaman" },
@@ -27,8 +36,52 @@ const SWATCHES = [
   { name: "Success", token: "--success", hex: "#187C49", use: "Bebas konflik, terbit" },
 ];
 
-const sampleConflicts = INITIAL_CONFLICTS.filter((c) => !c.resolved).slice(0, 3);
+const sampleConflicts: ConflictListItem[] = INITIAL_CONFLICTS.filter((c) => !c.resolved)
+  .slice(0, 3)
+  .map((c) => ({
+    id: c.id,
+    type: c.type,
+    severity: c.severity,
+    description: c.description,
+    confidence: c.confidence,
+    slotIds: c.slotIds,
+  }));
 const sampleResolve = INITIAL_CONFLICTS[0];
+
+const sampleTableRows = [
+  { id: 1, nama: "XII RPL 1", kode: "RPL-12-1", jurusan: "RPL", siswa: 32, jam: 38 },
+  { id: 2, nama: "XII RPL 2", kode: "RPL-12-2", jurusan: "RPL", siswa: 30, jam: 36 },
+  { id: 3, nama: "XI TKJ A", kode: "TKJ-11-A", jurusan: "TKJ", siswa: 28, jam: 40 },
+];
+
+const sampleTableFields = [
+  { key: "nama", label: "Nama kelas" },
+  { key: "kode", label: "Kode" },
+  {
+    key: "jurusan",
+    label: "Jurusan",
+    type: "select" as const,
+    options: [
+      { value: "RPL", label: "RPL" },
+      { value: "TKJ", label: "TKJ" },
+    ],
+  },
+  { key: "siswa", label: "Siswa", type: "number" as const },
+  { key: "jam", label: "Jam/minggu", type: "number" as const },
+];
+
+const sampleTableColumns = sampleTableFields.map((f) => ({
+  key: f.key,
+  label: f.label,
+  sortType: columnSortType(f),
+  align: f.type === "number" ? ("right" as const) : undefined,
+  render:
+    f.key === "kode"
+      ? (value: unknown) => (
+          <span className="font-semibold text-primary tabular-nums">{String(value ?? "—")}</span>
+        )
+      : undefined,
+}));
 
 function Section({
   title,
@@ -111,9 +164,9 @@ export default function StyleGuidePage() {
           </div>
         </div>
         <div className="max-w-xl text-right">
-          <h1 className="text-2xl font-bold tracking-tight">The Sync Board</h1>
+          <h1 className="gis-page-title">The Sync Board</h1>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-            Satu Press Blue untuk aksi dan AI. Canvas Cool Sheet. Ring, bukan bayangan.
+            Press Blue tetap. Struktur OpenAI: pill, 6px card, hairline border, tanpa shadow.
           </p>
         </div>
       </header>
@@ -126,7 +179,7 @@ export default function StyleGuidePage() {
               <div
                 key={item.token}
                 data-component="GIS/Swatch"
-                className="overflow-hidden rounded-xl"
+                className="overflow-hidden rounded-[var(--radius-card)]"
                 style={{ backgroundColor: "#FFFFFF", border: "1px solid #D9E1E9" }}
               >
                 <img
@@ -149,10 +202,10 @@ export default function StyleGuidePage() {
       </Section>
 
       <Section title="Huruf" kicker="Geist">
-        <div data-component="GIS/Type" data-auto-layout="true" className="space-y-4 rounded-xl bg-card px-5 py-6 ring-1 ring-foreground/10">
+        <div data-component="GIS/Type" data-auto-layout="true" className="space-y-4 rounded-[var(--radius-card)] border border-border bg-card px-5 py-6">
           <div>
-            <p className="text-[11px] text-muted-foreground">Headline · 24px · Bold · tracking-tight</p>
-            <p className="text-2xl font-bold tracking-tight">Sinkronisasi Ganjil 2026/2027</p>
+            <p className="text-sm text-muted-foreground">Page title · 28px · Medium · tracking-tight</p>
+            <p className="gis-page-title">Sinkronisasi Ganjil 2026/2027</p>
           </div>
           <div>
             <p className="text-[11px] text-muted-foreground">Title · 18px · Semibold</p>
@@ -238,17 +291,17 @@ export default function StyleGuidePage() {
           </div>
           <div className="space-y-2">
             <p className="text-xs font-medium">Nav item</p>
-            <div className="w-56 space-y-1 rounded-xl bg-sidebar p-2">
+            <div className="w-56 space-y-1 rounded-[var(--radius-card)] border border-border bg-sidebar p-2">
               <div
                 data-component="GIS/Nav/Active"
-                className="flex items-center gap-2 rounded-md bg-sidebar-accent px-2 py-2 text-sm font-medium text-sidebar-accent-foreground"
+                className="flex items-center gap-2 rounded-full bg-primary/5 px-3 py-2 text-sm font-medium text-primary"
               >
                 <LayoutDashboard className="size-4" />
                 Dashboard
               </div>
               <div
                 data-component="GIS/Nav/Idle"
-                className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground"
+                className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/50"
               >
                 <LayoutDashboard className="size-4" />
                 Jadwal
@@ -322,11 +375,33 @@ export default function StyleGuidePage() {
         <div
           data-component="GIS/Empty"
           data-auto-layout="true"
-          className="flex max-w-sm flex-col items-center gap-2 rounded-xl bg-secondary px-4 py-8 text-center text-sm text-muted-foreground"
+          className="flex max-w-sm flex-col items-center gap-2 rounded-[var(--radius-card)] border border-border bg-secondary px-4 py-8 text-center text-sm text-muted-foreground"
         >
           <CheckCircle2 className="size-8 text-foreground/50" />
           <p>Tidak ada konflik terbuka.</p>
         </div>
+      </Section>
+
+      <Section title="Tabel data" kicker="Panel + toolbar">
+        <DataTable
+          sortOptions={buildTableSortOptions(sampleTableFields)}
+          filters={buildTableFilters(sampleTableFields)}
+          searchPlaceholder={TABLE_SEARCH_PLACEHOLDER}
+          getSearchText={(row) => rowSearchText(row, sampleTableFields)}
+          columns={sampleTableColumns}
+          data={sampleTableRows}
+          onEdit={() => undefined}
+          onDelete={() => undefined}
+        />
+      </Section>
+
+      <Section title="OpenAI hybrid" kicker="Struktur">
+        <ul className="max-w-[65ch] list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-foreground/85">
+          <li>Interaktif: pill (button, input, select, badge, nav).</li>
+          <li>Kartu & panel: 6px radius, <code className="font-mono text-xs">border-border</code>, tanpa shadow.</li>
+          <li>Grid & tabel CRUD: tetap compact (<code className="font-mono text-xs">text-sm</code>, padding ketat).</li>
+          <li>Warna: Press Blue hue 247 — tidak diganti hitam OpenAI.</li>
+        </ul>
       </Section>
 
       <Section title="Aturan">
@@ -334,7 +409,7 @@ export default function StyleGuidePage() {
           <li>Canvas putih-abu, sidebar sedikit lebih abu, kartu hampir putih.</li>
           <li>Biru = primary, fokus, seleksi, badge AI. Satu hue (247), bukan ungu terpisah.</li>
           <li>Konflik kesalahan merah, peringatan kuning — jangan pakai biru untuk keparahan.</li>
-          <li>Kedalaman: ring 1px, bukan drop shadow.</li>
+          <li>Kedalaman: border hairline, bukan drop shadow.</li>
           <li>Satu keluarga huruf: Geist. Data memakai angka tabular.</li>
         </ul>
       </Section>

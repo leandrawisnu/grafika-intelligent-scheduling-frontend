@@ -1,14 +1,15 @@
 import type {
   TahunAjaran, Semester, Jurusan, Guru, MataPelajaran, Kelas, Ruangan, Hari, JamPelajaran,
-  JadwalSemester, JadwalKelas, SlotJadwal, Konflik,
+  JadwalSemester, JadwalKelas, SlotJadwal, Konflik, PratinjauImpor,
 } from "@/lib/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+const BASE_URL = "/api/v1";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", ...options?.headers },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -17,43 +18,66 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+async function requestForm<T>(path: string, body: FormData): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    credentials: "same-origin",
+    body,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function requestList<T>(path: string, options?: RequestInit): Promise<T[]> {
+  const data = await request<T[] | null>(path, options);
+  return Array.isArray(data) ? data : [];
+}
+
 export const api = {
   // Data Master
-  getTahunAjaran: () => request<TahunAjaran[]>("/tahun-ajaran"),
+  getTahunAjaran: () => requestList<TahunAjaran>("/tahun-ajaran"),
   createTahunAjaran: (d: Partial<TahunAjaran>) => request<TahunAjaran>("/tahun-ajaran", { method: "POST", body: JSON.stringify(d) }),
   updateTahunAjaran: (id: string, d: Partial<TahunAjaran>) => request<TahunAjaran>(`/tahun-ajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteTahunAjaran: (id: string) => request<{status: string}>(`/tahun-ajaran/${id}`, { method: "DELETE" }),
 
-  getSemester: (tahunAjaranId?: string) => request<Semester[]>(`/semester${tahunAjaranId ? `?tahun_ajaran_id=${tahunAjaranId}` : ""}`),
+  getSemester: (tahunAjaranId?: string) =>
+    requestList<Semester>(`/semester${tahunAjaranId ? `?tahun_ajaran_id=${tahunAjaranId}` : ""}`),
   createSemester: (d: Partial<Semester>) => request<Semester>("/semester", { method: "POST", body: JSON.stringify(d) }),
+  updateSemester: (id: string, d: Partial<Semester>) =>
+    request<Semester>(`/semester/${id}`, { method: "PUT", body: JSON.stringify(d) }),
+  deleteSemester: (id: string) => request<{ status: string }>(`/semester/${id}`, { method: "DELETE" }),
 
-  getJurusan: () => request<Jurusan[]>("/jurusan"),
+  getJurusan: () => requestList<Jurusan>("/jurusan"),
   createJurusan: (d: Partial<Jurusan>) => request<Jurusan>("/jurusan", { method: "POST", body: JSON.stringify(d) }),
   updateJurusan: (id: string, d: Partial<Jurusan>) => request<Jurusan>(`/jurusan/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteJurusan: (id: string) => request<{status: string}>(`/jurusan/${id}`, { method: "DELETE" }),
 
-  getGuru: () => request<Guru[]>("/guru"),
+  getGuru: () => requestList<Guru>("/guru"),
   createGuru: (d: Partial<Guru>) => request<Guru>("/guru", { method: "POST", body: JSON.stringify(d) }),
   updateGuru: (id: string, d: Partial<Guru>) => request<Guru>(`/guru/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteGuru: (id: string) => request<{status: string}>(`/guru/${id}`, { method: "DELETE" }),
 
-  getMataPelajaran: () => request<MataPelajaran[]>("/mata-pelajaran"),
+  getMataPelajaran: () => requestList<MataPelajaran>("/mata-pelajaran"),
   createMataPelajaran: (d: Partial<MataPelajaran>) => request<MataPelajaran>("/mata-pelajaran", { method: "POST", body: JSON.stringify(d) }),
   updateMataPelajaran: (id: string, d: Partial<MataPelajaran>) => request<MataPelajaran>(`/mata-pelajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteMataPelajaran: (id: string) => request<{status: string}>(`/mata-pelajaran/${id}`, { method: "DELETE" }),
 
-  getKelas: (semesterId?: string) => request<Kelas[]>(`/kelas${semesterId ? `?semester_id=${semesterId}` : ""}`),
+  getKelas: (semesterId?: string) =>
+    requestList<Kelas>(`/kelas${semesterId ? `?semester_id=${semesterId}` : ""}`),
   createKelas: (d: Partial<Kelas>) => request<Kelas>("/kelas", { method: "POST", body: JSON.stringify(d) }),
   updateKelas: (id: string, d: Partial<Kelas>) => request<Kelas>(`/kelas/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteKelas: (id: string) => request<{status: string}>(`/kelas/${id}`, { method: "DELETE" }),
 
-  getRuangan: () => request<Ruangan[]>("/ruangan"),
+  getRuangan: () => requestList<Ruangan>("/ruangan"),
   createRuangan: (d: Partial<Ruangan>) => request<Ruangan>("/ruangan", { method: "POST", body: JSON.stringify(d) }),
   updateRuangan: (id: string, d: Partial<Ruangan>) => request<Ruangan>(`/ruangan/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteRuangan: (id: string) => request<{status: string}>(`/ruangan/${id}`, { method: "DELETE" }),
 
-  getHari: () => request<Hari[]>("/hari"),
-  getJamPelajaran: () => request<JamPelajaran[]>("/jam-pelajaran"),
+  getHari: () => requestList<Hari>("/hari"),
+  getJamPelajaran: () => requestList<JamPelajaran>("/jam-pelajaran"),
   createJamPelajaran: (d: Partial<JamPelajaran>) => request<JamPelajaran>("/jam-pelajaran", { method: "POST", body: JSON.stringify(d) }),
   updateJamPelajaran: (id: string, d: Partial<JamPelajaran>) => request<JamPelajaran>(`/jam-pelajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteJamPelajaran: (id: string) => request<{status: string}>(`/jam-pelajaran/${id}`, { method: "DELETE" }),
@@ -63,7 +87,7 @@ export const api = {
 
   // === JADWAL SEMESTER ===
   createJadwalSemester: (d: { semester_id: string }) => request<JadwalSemester>("/jadwal-semester", { method: "POST", body: JSON.stringify(d) }),
-  getJadwalSemester: () => request<JadwalSemester[]>("/jadwal-semester"),
+  getJadwalSemester: () => requestList<JadwalSemester>("/jadwal-semester"),
   getJadwalSemesterById: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}`),
   updateStatus: (id: string, status: string) => request<JadwalSemester>(`/jadwal-semester/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
   publikasi: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}/publikasi`, { method: "POST" }),
@@ -80,7 +104,25 @@ export const api = {
   createJadwalKelas: (jsId: string, d: { kelas_id: string }) =>
     request<JadwalKelas>(`/jadwal-semester/${jsId}/jadwal-kelas`, { method: "POST", body: JSON.stringify(d) }),
   getJadwalKelas: (id: string) => request<JadwalKelas>(`/jadwal-kelas/${id}`),
-  getJadwalKelasAktif: (jsId: string) => request<JadwalKelas[]>(`/jadwal-semester/${jsId}/jadwal-kelas-aktif`),
+  getJadwalKelasAktif: (jsId: string) =>
+    requestList<JadwalKelas>(`/jadwal-semester/${jsId}/jadwal-kelas-aktif`),
+
+  pratinjauImpor: (jsId: string, berkas: File) => {
+    const body = new FormData();
+    body.append("berkas", berkas);
+    return requestForm<PratinjauImpor>(`/jadwal-semester/${jsId}/impor/pratinjau`, body);
+  },
+  simpanImpor: (jsId: string, baris: {
+    kelas_id: string;
+    mata_pelajaran_id: string;
+    hari_id: string;
+    jam_pelajaran_id: string;
+    ruangan_id?: string;
+    guru_id?: string;
+  }[]) => request<{ jumlah: number }>(`/jadwal-semester/${jsId}/impor`, {
+    method: "POST",
+    body: JSON.stringify({ baris }),
+  }),
 
   // Slot
   tambahSlot: (jkId: string, d: Partial<SlotJadwal>) =>
@@ -91,7 +133,8 @@ export const api = {
   hapusSlot: (slotId: string) => request<{status: string}>(`/slot/${slotId}`, { method: "DELETE" }),
 
   // Penempatan Guru
-  getSlotBelumDiplot: (jsId: string) => request<SlotJadwal[]>(`/jadwal-semester/${jsId}/slot-belum-diplot`),
+  getSlotBelumDiplot: (jsId: string) =>
+    requestList<SlotJadwal>(`/jadwal-semester/${jsId}/slot-belum-diplot`),
   tugaskanGuru: (slotId: string, guruId: string) =>
     request<SlotJadwal>(`/slot/${slotId}/tugaskan-guru`, { method: "PUT", body: JSON.stringify({ guru_id: guruId }) }),
   tugaskanMassal: (jsId: string, tugas: { slot_id: string; guru_id: string }[]) =>
@@ -99,7 +142,7 @@ export const api = {
   getKetersediaanGuru: (jsId: string) => request<any[]>(`/jadwal-semester/${jsId}/ketersediaan-guru`),
 
   // Konflik
-  getKonflik: (jsId: string) => request<Konflik[]>(`/jadwal-semester/${jsId}/konflik`),
+  getKonflik: (jsId: string) => requestList<Konflik>(`/jadwal-semester/${jsId}/konflik`),
   validasiJadwal: (jsId: string) =>
     request<{jumlah_konflik: number; konflik: any[]; bersih: boolean}>(`/jadwal-semester/${jsId}/validasi`, { method: "POST" }),
   prediksiKonflik: (jsId: string) =>

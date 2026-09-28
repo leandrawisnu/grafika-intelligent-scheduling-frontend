@@ -6,17 +6,24 @@ import { Button } from "@/components/ui/button";
 import { AiBadge } from "@/components/ai-badge";
 import { cn } from "@/lib/utils";
 import { CONFLICT_LABEL, type PrototypeConflict } from "@/lib/prototype-types";
-import { usePrototype } from "@/lib/prototype-store";
 
-export function ResolvePanel({ conflict }: { conflict: PrototypeConflict }) {
-  const { applyAlternative, appliedAltByConflict, published } = usePrototype();
-  const applied = appliedAltByConflict[conflict.id];
+export function ResolvePanel({
+  conflict,
+  published = false,
+}: {
+  conflict: PrototypeConflict;
+  published?: boolean;
+}) {
+  const [appliedAlt, setAppliedAlt] = useState<string | null>(null);
+  const [resolved, setResolved] = useState(conflict.resolved);
+  const applied = appliedAlt;
   const [openExplain, setOpenExplain] = useState<string | null>(conflict.alternatives[0]?.id ?? null);
 
-  if (conflict.resolved) {
+  if (resolved) {
+
     const alt = conflict.alternatives.find((a) => a.id === applied);
     return (
-      <div className="rounded-xl bg-secondary px-4 py-3 text-sm">
+      <div className="rounded-[var(--radius-card)] border border-border bg-secondary px-4 py-3 text-sm">
         <p className="font-medium text-foreground">Konflik ini sudah diselesaikan.</p>
         {alt ? (
           <p className="mt-1 text-muted-foreground">
@@ -53,7 +60,7 @@ export function ResolvePanel({ conflict }: { conflict: PrototypeConflict }) {
               data-component="GIS/ResolveCard"
               data-auto-layout="true"
               className={cn(
-                "flex flex-col rounded-xl bg-card p-4 ring-1 ring-foreground/10",
+                "flex flex-col rounded-[var(--radius-card)] border border-border bg-card p-4",
                 alt.rank === 1 && "ring-ai/40 bg-ai-muted/40"
               )}
             >
@@ -96,7 +103,10 @@ export function ResolvePanel({ conflict }: { conflict: PrototypeConflict }) {
               <Button
                 className="mt-4"
                 disabled={published}
-                onClick={() => applyAlternative(conflict.id, alt.id)}
+                onClick={() => {
+                  setAppliedAlt(alt.id);
+                  setResolved(true);
+                }}
               >
                 <Check className="mr-1.5 size-4" />
                 Terapkan solusi {alt.label}

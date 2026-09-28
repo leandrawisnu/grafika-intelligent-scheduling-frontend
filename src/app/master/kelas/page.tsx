@@ -17,20 +17,6 @@ function kelasPayload(form: Record<string, unknown>) {
   };
 }
 
-function labelJurusan(row: Record<string, unknown>, jurusan: Jurusan[]) {
-  const nested = row.jurusan as Jurusan | undefined;
-  if (nested?.nama) return nested.nama;
-  const id = String(row.jurusan_id ?? "");
-  return jurusan.find((j) => j.id === id)?.nama ?? (id ? id : "—");
-}
-
-function labelSemester(row: Record<string, unknown>, semester: Semester[]) {
-  const nested = row.semester as Semester | undefined;
-  if (nested?.nama) return nested.nama;
-  const id = String(row.semester_id ?? "");
-  return semester.find((s) => s.id === id)?.nama ?? (id ? id : "—");
-}
-
 export default function KelasPage() {
   const [jurusan, setJurusan] = useState<Jurusan[]>([]);
   const [semester, setSemester] = useState<Semester[]>([]);
@@ -59,14 +45,12 @@ export default function KelasPage() {
         label: "Jurusan",
         type: "select" as const,
         options: jurusanOptions,
-        render: (_: unknown, row: Record<string, unknown>) => labelJurusan(row, jurusan),
       },
       {
         key: "semester_id",
         label: "Semester",
         type: "select" as const,
         options: semesterOptions,
-        render: (_: unknown, row: Record<string, unknown>) => labelSemester(row, semester),
       },
     ],
     [jurusan, semester, jurusanOptions, semesterOptions]

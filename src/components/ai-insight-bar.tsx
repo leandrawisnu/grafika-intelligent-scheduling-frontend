@@ -20,12 +20,12 @@ export function AiInsightBar({
       data-component="GIS/InsightBar"
       data-auto-layout="true"
       className={cn(
-        "flex flex-col gap-3 rounded-xl bg-ai-muted px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between",
+        "flex flex-col gap-3 rounded-[var(--radius-card)] border border-primary/15 bg-ai-muted px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between",
         className
       )}
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-ai text-ai-foreground">
+        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-card)] bg-ai text-ai-foreground">
           <Sparkles className="size-4" aria-hidden />
         </span>
         <div className="min-w-0">

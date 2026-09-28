@@ -1,18 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Next.js app for **Grafika Intelligent Scheduling**.
+
+## Backend integration
+
+Production routes use the Go API (`NEXT_PUBLIC_API_URL`). Mock data remains only on `/style-guide`.
+
+See [docs/INTEGRATION.md](docs/INTEGRATION.md) for the feature matrix and dev DB seed order.
 
 ## Getting Started
 
 First, run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
+bun run dev
 ```
+
+Docker / GHCR build juga memakai Bun (`bun.lock`).
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

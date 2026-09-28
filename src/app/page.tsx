@@ -1,32 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AiInsightBar } from "@/components/ai-insight-bar";
 import { WorkflowStepper } from "@/components/workflow-stepper";
 import { ConflictList } from "@/components/conflict-list";
-import { JADWAL_ID } from "@/lib/prototype-types";
+import { useJadwal } from "@/lib/jadwal-context";
 import { usePrototype } from "@/lib/prototype-store";
+import { jadwalKonflikHref } from "@/lib/navigation";
+import { GisPanel, GisSectionHeading, GisStatTile } from "@/components/gis-surface";
 
 export default function Dashboard() {
   const router = useRouter();
-  const store = usePrototype();
+  const { role } = usePrototype();
   const {
-    role,
+    activeJadwalId,
+    semesterLabel,
     steps,
-    predicted,
-    predicting,
-    openConflicts,
+    validated,
+    validating,
+    conflictItems,
+    openKonflik,
     errorCount,
     warningCount,
     unplotted,
     published,
-    runPrediction,
+    runValidasi,
     setSelectedConflictId,
-  } = store;
+    jadwal,
+  } = useJadwal();
 
   if (role === "guru") {
     return (
@@ -55,54 +59,69 @@ export default function Dashboard() {
     );
   }
 
-  const insightTitle = published
-    ? "Jadwal Ganjil 2026/2027 sudah dipublikasikan"
-    : !predicted
-      ? "AI belum memindai sinkronisasi semester ini"
-      : openConflicts.length === 0
-        ? "Tidak ada konflik terbuka. Siap publikasi."
-        : `${openConflicts.length} potensi konflik menunggu keputusan kurikulum`;
+  const jsHref = activeJadwalId ? `/jadwal/${activeJadwalId}` : "/jadwal";
+  const konflikHref = jadwalKonflikHref(activeJadwalId);
+  const currentStep = steps.find((s) => s.status === "current");
 
-  const insightDetail = !predicted
-    ? "Conflict Predictor menandai bentrok guru, ruangan, kelebihan jam, dan hari piket sebelum jadwal dikunci."
-    : openConflicts.length > 0
-      ? `${errorCount} kesalahan, ${warningCount} peringatan. Setiap item punya tiga alternatif penyelesaian.`
-      : "Semua rekomendasi AI yang dipilih sudah diterapkan ke grid.";
+  const insightTitle = published
+    ? `${semesterLabel} sudah dipublikasikan`
+    : !validated
+      ? "Validasi konflik belum dijalankan"
+      : openKonflik.length === 0
+        ? "Tidak ada konflik terbuka. Siap publikasi."
+        : `${openKonflik.length} konflik menunggu keputusan kurikulum`;
+
+  const insightDetail = !validated
+    ? "Validasi memeriksa bentrok guru, ruangan, dan aturan jam dari database."
+    : openKonflik.length > 0
+      ? `${errorCount} kesalahan, ${warningCount} peringatan.`
+      : "Semua konflik terselesaikan atau tidak ada.";
+
+  const jurusanLabel =
+    jadwal?.jurusan
+      ?.map((j) => j.jurusan?.kode ?? j.jurusan?.nama)
+      .filter(Boolean)
+      .join(", ") || "—";
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Sinkronisasi Ganjil 2026/2027</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Tiga jurusan sudah mengumpulkan draf. Tugas kurikulum: plotting guru, minta AI memprediksi konflik, pilih penyelesaian, lalu publikasi.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold tracking-wide text-primary/80">{semesterLabel}</p>
+          <h1 className="gis-page-title mt-1">Beranda</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Alur kurikulum: plotting guru, validasi konflik, publikasi ke guru dan siswa.
+          </p>
+        </div>
+        {currentStep ? (
+          <Link href={currentStep.href} className={buttonVariants()}>
+            Langkah berikutnya: {currentStep.label}
+            <ArrowRight className="ml-1.5 size-4" />
+          </Link>
+        ) : null}
       </div>
 
-      <WorkflowStepper steps={steps} />
+      <GisPanel className="p-4">
+        <WorkflowStepper steps={steps} />
+      </GisPanel>
 
       <AiInsightBar
         title={insightTitle}
         detail={insightDetail}
-        meta={
-          predicting
-            ? "Memindai slot lintas jurusan…"
-            : predicted
-              ? "Prediksi terakhir pada sesi demo ini"
-              : "Belum dijalankan"
-        }
+        meta={validating ? "Memvalidasi…" : validated ? "Validasi pada sesi ini" : "Belum dijalankan"}
       >
-        {!predicted ? (
-          <Button onClick={runPrediction} disabled={predicting}>
+        {!validated ? (
+          <Button onClick={() => void runValidasi()} disabled={validating || !activeJadwalId}>
             <Sparkles className="mr-1.5 size-4" />
-            {predicting ? "Memprediksi…" : "Jalankan Prediksi AI"}
+            {validating ? "Memvalidasi…" : "Jalankan validasi"}
           </Button>
-        ) : openConflicts.length > 0 ? (
-          <Link href="/ai/konflik" className={buttonVariants()}>
+        ) : openKonflik.length > 0 ? (
+          <Link href={konflikHref} className={buttonVariants()}>
             Tinjau konflik
             <ArrowRight className="ml-1.5 size-4" />
           </Link>
-        ) : !published ? (
-          <Link href={`/jadwal/${JADWAL_ID}?tab=publikasi`} className={buttonVariants()}>
+        ) : !published && activeJadwalId ? (
+          <Link href={`${jsHref}?tab=publikasi`} className={buttonVariants()}>
             Ke publikasi
             <ArrowRight className="ml-1.5 size-4" />
           </Link>
@@ -111,53 +130,46 @@ export default function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <section className="space-y-3">
-          <h2 className="text-sm font-medium">Status alur</h2>
-          <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            <div className="rounded-xl bg-secondary px-3 py-3">
-              <dt className="text-xs text-muted-foreground">Jurusan</dt>
-              <dd className="mt-1 font-medium">DKV, PG, MM</dd>
-            </div>
-            <div className="rounded-xl bg-secondary px-3 py-3">
-              <dt className="text-xs text-muted-foreground">Belum diplot</dt>
-              <dd className="mt-1 font-medium tabular-nums">{unplotted.length} slot</dd>
-            </div>
-            <div className="rounded-xl bg-ai-muted px-3 py-3">
-              <dt className="flex items-center gap-1 text-xs text-ai">
-                <AlertTriangle className="size-3.5" />
-                Konflik AI
-              </dt>
-              <dd className="mt-1 font-medium tabular-nums">
-                {predicted ? openConflicts.length : "—"}
-              </dd>
-            </div>
+          <GisSectionHeading title="Status alur" />
+          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <GisStatTile label="Jurusan di jadwal" value={jurusanLabel} />
+            <GisStatTile label="Belum diplot" value={`${unplotted.length} slot`} />
+            <GisStatTile
+              label="Konflik"
+              value={validated ? openKonflik.length : "—"}
+              tone="ai"
+              icon={AlertTriangle}
+            />
           </dl>
           <div className="flex flex-wrap gap-2 pt-1">
-            <Link href={`/jadwal/${JADWAL_ID}`} className={buttonVariants({ variant: "outline" })}>
+            <Link href={jsHref} className={buttonVariants({ variant: "outline" })}>
               Buka grid jadwal
             </Link>
-            <Link href={`/jadwal/${JADWAL_ID}?tab=plotting`} className={buttonVariants({ variant: "outline" })}>
+            <Link href={`${jsHref}?tab=plotting`} className={buttonVariants({ variant: "outline" })}>
               Plotting guru
             </Link>
             <Link href="/ai/tanya" className={buttonVariants({ variant: "outline" })}>
-              Tanya AI
+              Bantuan AI
             </Link>
           </div>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-medium">Hasil prediksi</h2>
-          {!predicted ? (
-            <p className="rounded-xl bg-muted px-4 py-6 text-sm text-muted-foreground">
-              Grid masih terlihat bersih sampai prediksi dijalankan. Bentrok lintas jurusan baru muncul sebagai overlay AI.
-            </p>
+          <GisSectionHeading title="Hasil validasi" />
+          {!validated ? (
+            <GisPanel className="px-4 py-6 text-sm text-muted-foreground">
+              Grid belum menandai konflik sampai validasi dijalankan.
+            </GisPanel>
           ) : (
-            <ConflictList
-              items={openConflicts}
-              onSelect={(id) => {
-                setSelectedConflictId(id);
-                router.push("/ai/selesaikan");
-              }}
-            />
+            <GisPanel className="p-3">
+              <ConflictList
+                items={conflictItems}
+                onSelect={(id) => {
+                  setSelectedConflictId(id);
+                  router.push(konflikHref);
+                }}
+              />
+            </GisPanel>
           )}
         </section>
       </div>

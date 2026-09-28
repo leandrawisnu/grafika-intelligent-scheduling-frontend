@@ -1,0 +1,28 @@
+# Standalone frontend
+# Full stack VM (Caddy + BE + ML + DB)
+#
+# Usage:
+#   cp .env.example .env
+#   # Backend harus sudah jalan (localhost:8080 atau lewat Caddy /api)
+#   docker compose up -d --build
+#   open http://127.0.0.1:3000
+
+name: gis-frontend
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://127.0.0.1:8080/api/v1}
+    container_name: gis-frontend-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      TZ: ${TZ:-Asia/Jakarta}
+    ports:
+      - "127.0.0.1:${PORT:-3000}:${PORT:-3000}"
