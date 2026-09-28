@@ -38,6 +38,24 @@ function labelForSegment(segment: string) {
   return SEGMENT_LABELS[segment] ?? segment.replace(/-/g, " ");
 }
 
+const partnerLogos = [
+  { src: "/Icons/1.%20LOGO%20JHIC%202.0.png", alt: "Jagoan Hosting Innovation Competition 2026" },
+  { src: "/Icons/2.%20Logo%20Jagoan%20Hosting.png", alt: "Jagoan Hosting" },
+  { src: "/Icons/3.%20KOMDIGI.png", alt: "Komdigi" },
+  { src: "/Icons/4.%20Garuda%20Spark%20Full%20Color.png", alt: "Garuda Spark Innovation Hub" },
+  { src: "/Icons/5.%20LOGO%20NGALUP.png", alt: "Ngalup.co" },
+] as const;
+
+function PartnerLogoRow() {
+  return (
+    <div className="flex h-12 shrink-0 items-center justify-end gap-4 overflow-x-auto border-t bg-background px-4 md:px-6">
+      {partnerLogos.map((logo) => (
+        <img key={logo.src} src={logo.src} alt={logo.alt} className="h-6 w-auto shrink-0 object-contain" />
+      ))}
+    </div>
+  );
+}
+
 function AppBreadcrumb() {
   const pathname = usePathname();
   if (pathname === "/") {
@@ -110,6 +128,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="gis-main-canvas gis-scrollbar mx-auto flex-1 w-full max-w-[var(--page-max-width)] overflow-auto p-6 md:p-8">
             {children}
           </div>
+          <PartnerLogoRow />
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>
