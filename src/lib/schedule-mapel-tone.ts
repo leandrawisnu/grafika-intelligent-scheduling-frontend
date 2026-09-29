@@ -38,20 +38,49 @@ const TONES: MapelTone[] = [
   },
 ];
 
-function hashId(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-  return Math.abs(h);
+const TEORI = TONES[3];
+const LAINNYA = TONES[4];
+
+const JURUSAN_PALETTE: { match: RegExp; tone: MapelTone }[] = [
+  { match: /anim|\bani\b|multimedia|\bmm\b/, tone: TONES[1] },
+  { match: /dkv|desain|grafis|grafika/, tone: TONES[0] },
+  { match: /produksi|percetakan|\bpg\b|cetak/, tone: TONES[2] },
+];
+
+export type JurusanTone = { kode: string; nama: string };
+
+const TEORI_KATA = [
+  "matematika",
+  "bahasa",
+  "pkn",
+  "ppkn",
+  "pancasila",
+  "sejarah",
+  "agama",
+  "pjok",
+  "olahraga",
+  "seni",
+  "informatika",
+  "bimbingan",
+  "konseling",
+  "profil pelajar",
+];
+
+function teoriUmum(nama: string): boolean {
+  const lower = nama.toLowerCase();
+  return TEORI_KATA.some((kata) => lower.includes(kata));
 }
 
-export function toneForMapel(mapelId: string, mapelName: string): MapelTone {
+function toneJurusan(jurusan: JurusanTone): MapelTone {
+  const blob = `${jurusan.kode} ${jurusan.nama}`.toLowerCase();
+  const dasar = JURUSAN_PALETTE.find((item) => item.match.test(blob))?.tone ?? LAINNYA;
+  const label = jurusan.nama.trim() || jurusan.kode.trim() || dasar.label;
+  return { ...dasar, label };
+}
+
+function toneDariNama(mapelName: string): MapelTone {
   const lower = mapelName.toLowerCase();
-  if (
-    lower.includes("desain") ||
-    lower.includes("grafis") ||
-    lower.includes("foto") ||
-    lower.includes("layout")
-  ) {
+  if (lower.includes("desain") || lower.includes("grafis") || lower.includes("foto") || lower.includes("layout")) {
     return TONES[0];
   }
   if (lower.includes("anim") || lower.includes("video") || lower.includes("multimedia")) {
@@ -65,25 +94,27 @@ export function toneForMapel(mapelId: string, mapelName: string): MapelTone {
   ) {
     return TONES[2];
   }
-  if (
-    lower.includes("matematika") ||
-    lower.includes("bahasa") ||
-    lower.includes("pkn") ||
-    lower.includes("sejarah") ||
-    lower.includes("agama")
-  ) {
-    return TONES[3];
-  }
-  return TONES[hashId(mapelId) % TONES.length];
+  return LAINNYA;
+}
+
+export function toneForMapel(
+  _mapelId: string,
+  mapelName: string,
+  jurusan?: JurusanTone | null,
+): MapelTone {
+  if (teoriUmum(mapelName)) return TEORI;
+  if (jurusan) return toneJurusan(jurusan);
+  return toneDariNama(mapelName);
 }
 
 export function legendTonesFromMapel(
-  entries: { id: string; name: string }[]
+  entries: { id: string; name: string }[],
+  jurusan?: JurusanTone | null,
 ): MapelTone[] {
   const seen = new Set<string>();
   const out: MapelTone[] = [];
   for (const e of entries) {
-    const tone = toneForMapel(e.id, e.name);
+    const tone = toneForMapel(e.id, e.name, jurusan);
     if (seen.has(tone.label)) continue;
     seen.add(tone.label);
     out.push(tone);

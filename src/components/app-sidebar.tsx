@@ -11,6 +11,7 @@ import {
   Clock,
   DoorOpen,
   GraduationCap,
+  House,
   LogOut,
   MoreHorizontal,
   PanelLeft,
@@ -305,6 +306,12 @@ function KurikulumSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu className={sidebarMenuGap}>
             <WorkspaceNavItem
+              href="/"
+              label="Beranda"
+              icon={House}
+              active={pathname === "/"}
+            />
+            <WorkspaceNavItem
               href={jadwalHref}
               label="Jadwal mengajar"
               icon={Calendar}
@@ -353,6 +360,12 @@ function KoorSidebarNav() {
         <SectionLabel>Workspace</SectionLabel>
         <SidebarGroupContent>
           <SidebarMenu className={sidebarMenuGap}>
+            <WorkspaceNavItem
+              href="/"
+              label="Beranda"
+              icon={House}
+              active={pathname === "/"}
+            />
             <WorkspaceNavItem
               href={jadwalHref}
               label="Jadwal jurusan"

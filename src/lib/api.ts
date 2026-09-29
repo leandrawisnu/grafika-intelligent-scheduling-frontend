@@ -146,8 +146,10 @@ export const api = {
   createJadwalKelas: (jsId: string, d: { kelas_id: string }) =>
     request<JadwalKelas>(`/jadwal-semester/${jsId}/jadwal-kelas`, { method: "POST", body: JSON.stringify(d) }),
   getJadwalKelas: (id: string) => request<JadwalKelas>(`/jadwal-kelas/${id}`),
-  getJadwalKelasAktif: (jsId: string) =>
-    requestList<JadwalKelas>(`/jadwal-semester/${jsId}/jadwal-kelas-aktif`),
+  getJadwalKelasAktif: (jsId: string, opsi?: { ringkas?: boolean }) =>
+    requestList<JadwalKelas>(
+      `/jadwal-semester/${jsId}/jadwal-kelas-aktif${opsi?.ringkas ? "?ringkas=1" : ""}`,
+    ),
 
   pratinjauImpor: (jsId: string, berkas: File) => {
     const body = new FormData();

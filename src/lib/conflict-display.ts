@@ -1,4 +1,4 @@
-import type { Konflik } from "@/lib/types";
+import type { Konflik, SlotJadwal } from "@/lib/types";
 
 export type ConflictListItem = {
   id: string;
@@ -21,6 +21,117 @@ const LABEL: Record<string, string> = {
 
 export function conflictTypeLabel(type: string) {
   return LABEL[type] ?? type.replace(/_/g, " ");
+}
+
+export type ConflictRowSummary = {
+  title: string;
+  detail: string;
+};
+
+type GuruNameLookup = (id: string | null | undefined) => string | null;
+
+function named(catalogName: string | null | undefined, parsed: string, id?: string | null) {
+  const fromCatalog = (catalogName || "").trim();
+  if (fromCatalog && (!id || fromCatalog !== id)) return fromCatalog;
+  const fromText = parsed.trim();
+  if (fromText) return fromText;
+  return "—";
+}
+
+function jamAngka(value: string) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return value;
+  return String(Math.round(n));
+}
+
+function ringkasKelebihanJam(k: Konflik, guruName?: GuruNameLookup): ConflictRowSummary | null {
+  const match = k.deskripsi.match(
+    /^Guru (.+) memiliki total (\d+(?:\.\d+)?) jam mengajar per minggu, melebihi batas maksimal (\d+(?:\.\d+)?) jam$/,
+  );
+  if (!match) return null;
+  return {
+    title: named(guruName?.(k.guru_id), match[1], k.guru_id),
+    detail: `${jamAngka(match[2])} jam · batas ${jamAngka(match[3])}`,
+  };
+}
+
+function ringkasDariKalimat(k: Konflik, guruName?: GuruNameLookup): ConflictRowSummary | null {
+  const bentrokGuru = k.deskripsi.match(
+    /^Guru (.+) mengajar dua kelas \(.+ & .+\) pada jam (.+) hari (.+)$/,
+  );
+  if (bentrokGuru) {
+    return {
+      title: named(guruName?.(k.guru_id), bentrokGuru[1], k.guru_id),
+      detail: `dua kelas · ${bentrokGuru[3]} ${bentrokGuru[2]}`,
+    };
+  }
+
+  const libur = k.deskripsi.match(/^Guru (.+) dijadwalkan pada hari (.+) yang merupakan hari liburnya$/);
+  if (libur) {
+    return {
+      title: named(guruName?.(k.guru_id), libur[1], k.guru_id),
+      detail: libur[2],
+    };
+  }
+
+  const ruang = k.deskripsi.match(/^Ruangan (.+) digunakan oleh (.+) dan (.+) pada jam (.+) hari (.+)$/);
+  if (ruang) {
+    return {
+      title: ruang[1],
+      detail: `${ruang[2]} & ${ruang[3]} · ${ruang[5]} ${ruang[4]}`,
+    };
+  }
+
+  const kelas = k.deskripsi.match(
+    /^Kelas (.+) memiliki dua mata pelajaran \((.+) & (.+)\) pada jam (.+) hari (.+)$/,
+  );
+  if (kelas) {
+    return {
+      title: kelas[1],
+      detail: `${kelas[2]} & ${kelas[3]} · ${kelas[5]} ${kelas[4]}`,
+    };
+  }
+
+  return null;
+}
+
+export function conflictRowSummary(k: Konflik, guruName?: GuruNameLookup): ConflictRowSummary {
+  if (k.tipe_konflik === "guru_kelebihan_jam") {
+    const row = ringkasKelebihanJam(k, guruName);
+    if (row) return row;
+  }
+  const row = ringkasDariKalimat(k, guruName);
+  if (row) return row;
+  const deskripsi = (k.deskripsi || "").trim();
+  return { title: deskripsi || "—", detail: "" };
+}
+
+const TIPE_LEWAT_GURU = new Set(["guru_kelebihan_jam", "guru_hari_libur"]);
+
+export function konflikMenyentuhKelas(konflik: Konflik, kelasId: string, slots: SlotJadwal[]) {
+  if (!kelasId) return true;
+  const slotIds = [konflik.slot_a_id, konflik.slot_b_id].filter(Boolean);
+  if (slotIds.length > 0) {
+    return slots.some((slot) => slotIds.includes(slot.id) && slot.kelas_id === kelasId);
+  }
+  if (!TIPE_LEWAT_GURU.has(konflik.tipe_konflik) || !konflik.guru_id) return false;
+  return slots.some((slot) => slot.guru_id === konflik.guru_id && slot.kelas_id === kelasId);
+}
+
+export function groupKonflikByType(items: Konflik[]) {
+  const order: string[] = [];
+  const grouped = new Map<string, Konflik[]>();
+  for (const item of items) {
+    const type = item.tipe_konflik;
+    const bucket = grouped.get(type);
+    if (!bucket) {
+      order.push(type);
+      grouped.set(type, [item]);
+      continue;
+    }
+    bucket.push(item);
+  }
+  return order.map((type) => ({ type, items: grouped.get(type) ?? [] }));
 }
 
 export function konflikToListItem(k: Konflik): ConflictListItem {

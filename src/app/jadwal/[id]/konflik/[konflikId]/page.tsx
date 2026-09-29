@@ -69,7 +69,7 @@ export default function TinjauSolusiPage() {
     setError(null);
     try {
       await api.terimaResolusi(aktif.id);
-      await loadJadwal(jadwalId);
+      await loadJadwal(jadwalId, { paksa: true });
       router.push(`/jadwal/${jadwalId}/konflik`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal menerapkan usulan");
