@@ -72,7 +72,7 @@ export default function SiswaJadwalPage() {
           className="underline"
           onClick={() => {
             setRole("kurikulum");
-            router.push("/");
+            router.push("/beranda");
           }}
         >
           Kembali ke kurikulum

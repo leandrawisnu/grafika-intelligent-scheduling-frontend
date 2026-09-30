@@ -174,7 +174,7 @@ export default function GuruJadwalPage() {
           className="ml-1 underline"
           onClick={() => {
             setRole("kurikulum");
-            router.push("/");
+            router.push("/beranda");
           }}
         >
           Kembali ke kurikulum
