@@ -23,6 +23,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
+import { clockForApi, normalizeClock, TimePicker } from "@/components/ui/time-picker";
 import type { TableQuery } from "@/lib/api";
 import { formatDateId, normalizeApiDateField } from "@/lib/dates";
 import { resolveFkLabel } from "@/lib/display-labels";
@@ -39,7 +40,11 @@ import { DataTable } from "./data-table";
 interface Field {
   key: string;
   label: string;
-  type?: "text" | "number" | "select" | "date";
+  type?: "text" | "number" | "select" | "date" | "time";
+  /** Batas bawah input angka. Default 1. `jam_ke` memakai 0. */
+  min?: number;
+  /** Batas atas input angka. `jam_ke` memakai 12. */
+  max?: number;
   /** Untuk select: dropdown (default) atau segmented (pill dua pilihan). */
   selectVariant?: "dropdown" | "segmented";
   required?: boolean;
@@ -70,6 +75,13 @@ interface CRUDPageProps {
 }
 
 const CRUD_FORM_ID = "crud-dialog-form";
+
+function numberBounds(field: Field): { min: number; max?: number } {
+  return {
+    min: field.min ?? 1,
+    max: field.max ?? (field.key === "semester_ke" ? 2 : undefined),
+  };
+}
 
 function selectOptionsKey(fields: Field[]) {
   return fields
@@ -127,6 +139,7 @@ export function CRUDPage({
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("default");
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
@@ -146,9 +159,9 @@ export function CRUDPage({
     if (!sawData.current) setLoading(true);
     setLoadError(null);
     try {
-      const result = await fetchData({ page, q: search, sort, filters: activeFilters });
-      const perPage = result.per_page || 10;
-      const lastPage = Math.max(1, Math.ceil((result.total || 0) / perPage));
+      const result = await fetchData({ page, per_page: perPage, q: search, sort, filters: activeFilters });
+      const ukuran = result.per_page || perPage;
+      const lastPage = Math.max(1, Math.ceil((result.total || 0) / ukuran));
       if (page > lastPage) {
         setPage(lastPage);
         return;
@@ -169,7 +182,7 @@ export function CRUDPage({
     void load();
     // fetchData is stable enough for master pages; query state drives reloads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, sort, filterKey]);
+  }, [page, perPage, search, sort, filterKey]);
 
   const formFromRow = (row: Record<string, unknown>) => {
     const next: Record<string, unknown> = {};
@@ -182,6 +195,8 @@ export function CRUDPage({
       if (raw === undefined || raw === null) continue;
       if (field.type === "date") {
         next[field.key] = normalizeApiDateField(raw);
+      } else if (field.type === "time") {
+        next[field.key] = normalizeClock(raw);
       } else if (field.type === "select") {
         next[field.key] = String(raw);
       } else {
@@ -196,6 +211,9 @@ export function CRUDPage({
     for (const field of fields) {
       if (field.type === "number" && next[field.key] !== undefined && next[field.key] !== "") {
         next[field.key] = Number(next[field.key]);
+      }
+      if (field.type === "time" && next[field.key] !== undefined && next[field.key] !== "") {
+        next[field.key] = clockForApi(next[field.key]);
       }
     }
     return next;
@@ -262,6 +280,18 @@ export function CRUDPage({
         }
       }
     }
+    for (const field of fields) {
+      if (field.type !== "number") continue;
+      const raw = form[field.key];
+      if (raw === undefined || raw === null || String(raw).trim() === "") continue;
+      const n = Number(raw);
+      const { min, max } = numberBounds(field);
+      if (!Number.isInteger(n) || n < min || (max !== undefined && n > max)) {
+        return max !== undefined
+          ? `${field.label} harus ${min} sampai ${max}`
+          : `${field.label} minimal ${min}`;
+      }
+    }
     return null;
   };
 
@@ -304,7 +334,9 @@ export function CRUDPage({
       f.render ??
       (f.type === "date"
         ? (value: unknown) => formatDateId(value == null ? "" : String(value))
-        : f.type === "select" && f.key.endsWith("_id")
+        : f.type === "time"
+          ? (value: unknown) => normalizeClock(value) || "—"
+          : f.type === "select" && f.key.endsWith("_id")
           ? (_: unknown, row: Record<string, unknown>) =>
               resolveFkLabel(row, f.key, undefined, f.options)
           : undefined),
@@ -364,8 +396,13 @@ export function CRUDPage({
           onDelete={handleDelete}
           serverPaging={{
             page,
+            pageSize: perPage,
             total,
             onPageChange: setPage,
+            onPageSizeChange: (size) => {
+              setPerPage(size);
+              setPage(1);
+            },
             onSearchChange: (q) => {
               setPage(1);
               setSearch(q);
@@ -529,7 +566,27 @@ export function CRUDPage({
                 );
               }
 
+              if (field.type === "time") {
+                return (
+                  <div key={field.key} className={fieldWrapClass}>
+                    <Label htmlFor={`crud-${field.key}`}>
+                      {field.label}
+                      {required ? <span className="text-destructive"> *</span> : null}
+                    </Label>
+                    <TimePicker
+                      id={`crud-${field.key}`}
+                      value={String(form[field.key] ?? "")}
+                      onChange={(next) => setForm({ ...form, [field.key]: next })}
+                      placeholder={field.placeholder ?? "Pilih waktu"}
+                      aria-label={field.label}
+                    />
+                    {field.hint ? <p className="text-xs text-muted-foreground">{field.hint}</p> : null}
+                  </div>
+                );
+              }
+
               const inputType = field.type === "number" ? "number" : "text";
+              const { min: numberMin, max: numberMax } = numberBounds(field);
 
               return (
                 <div key={field.key} className={fieldWrapClass}>
@@ -542,9 +599,23 @@ export function CRUDPage({
                     type={inputType}
                     placeholder={field.placeholder}
                     value={form[field.key] ?? ""}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    min={field.type === "number" ? 1 : undefined}
-                    max={field.key === "semester_ke" ? 2 : undefined}
+                    onChange={(e) => {
+                      if (field.type !== "number") {
+                        setForm({ ...form, [field.key]: e.target.value });
+                        return;
+                      }
+                      const raw = e.target.value;
+                      if (raw === "") {
+                        setForm({ ...form, [field.key]: "" });
+                        return;
+                      }
+                      const n = Number(raw);
+                      if (!Number.isFinite(n)) return;
+                      const capped = numberMax === undefined ? n : Math.min(numberMax, n);
+                      setForm({ ...form, [field.key]: Math.max(numberMin, Math.trunc(capped)) });
+                    }}
+                    min={field.type === "number" ? numberMin : undefined}
+                    max={field.type === "number" ? numberMax : undefined}
                   />
                   {field.hint ? <p className="text-xs text-muted-foreground">{field.hint}</p> : null}
                 </div>

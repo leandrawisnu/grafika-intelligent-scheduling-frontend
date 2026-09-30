@@ -9,9 +9,9 @@ export default function JamPelajaranPage() {
       title="Jam Pelajaran"
       description="Kelola slot waktu pelajaran"
       fields={[
-        { key: "jam_ke", label: "Jam Ke-", type: "number" },
-        { key: "waktu_mulai", label: "Mulai" },
-        { key: "waktu_selesai", label: "Selesai" },
+        { key: "jam_ke", label: "Jam Ke-", type: "number", min: 0, max: 12 },
+        { key: "waktu_mulai", label: "Mulai", type: "time" },
+        { key: "waktu_selesai", label: "Selesai", type: "time" },
       ]}
       fetchData={api.listJamPelajaran}
       onCreate={(d) => api.createJamPelajaran(d)}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpDown, Filter, Pencil, Search, Trash2 } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, ChevronRight, Filter, Pencil, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,12 +35,14 @@ interface Column {
   align?: "left" | "right" | "center";
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZES = [10, 50, 100] as const;
 
 interface ServerPaging {
   page: number;
+  pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
   onSearchChange: (query: string) => void;
   onSortChange: (sort: string) => void;
   onFilterChange: (filters: Record<string, string>) => void;
@@ -136,6 +138,7 @@ export function DataTable({
   const [sort, setSort] = useState(sortOptions[0]?.value ?? "default");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
   const sentSearch = useRef("");
 
   useEffect(() => {
@@ -171,12 +174,13 @@ export function DataTable({
   }, [columns, data, debouncedQuery, filterValues, filters, getSearchText, serverPaging, sort]);
 
   const total = serverPaging ? serverPaging.total : rows.length;
+  const size = serverPaging ? serverPaging.pageSize : pageSize;
   const currentPage = serverPaging ? serverPaging.page : page;
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(total / size));
   const safePage = Math.min(Math.max(1, currentPage), pageCount);
   const visibleRows = serverPaging
     ? rows
-    : rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+    : rows.slice((safePage - 1) * size, safePage * size);
 
   useEffect(() => {
     if (serverPaging) return;
@@ -187,6 +191,15 @@ export function DataTable({
     const bounded = Math.min(Math.max(1, next), pageCount);
     if (serverPaging) serverPaging.onPageChange(bounded);
     else setPage(bounded);
+  };
+
+  const changePageSize = (next: number) => {
+    if (!PAGE_SIZES.includes(next as (typeof PAGE_SIZES)[number])) return;
+    if (serverPaging) serverPaging.onPageSizeChange(next);
+    else {
+      setPageSize(next);
+      setPage(1);
+    }
   };
 
   const colSpan = columns.length + (onEdit || onDelete ? 1 : 0);
@@ -384,32 +397,54 @@ export function DataTable({
           </TableBody>
         </Table>
       </div>
-      {total > PAGE_SIZE ? (
+      {total > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/80 px-4 py-3">
-          <p className="text-xs text-muted-foreground">
-            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, total)} dari {total}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-muted-foreground">
+              {(safePage - 1) * size + 1}–{Math.min(safePage * size, total)} dari {total}
+            </p>
+            <Select
+              value={String(size)}
+              onValueChange={(value) => {
+                if (!value) return;
+                changePageSize(Number(value));
+              }}
+            >
+              <SelectTrigger size="sm" className="h-8 w-[4.5rem] px-2" aria-label="Jumlah data per halaman">
+                <span className="text-sm tabular-nums">{size}</span>
+              </SelectTrigger>
+              <SelectContent align="start">
+                {PAGE_SIZES.map((option) => (
+                  <SelectItem key={option} value={String(option)}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon-sm"
+              aria-label="Sebelumnya"
               disabled={safePage <= 1}
               onClick={() => goToPage(safePage - 1)}
             >
-              Sebelumnya
+              <ChevronLeft className="size-4" />
             </Button>
-            <span className="text-xs tabular-nums text-muted-foreground">
+            <span className="min-w-10 text-center text-xs tabular-nums text-muted-foreground">
               {safePage} / {pageCount}
             </span>
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon-sm"
+              aria-label="Berikutnya"
               disabled={safePage >= pageCount}
               onClick={() => goToPage(safePage + 1)}
             >
-              Berikutnya
+              <ChevronRight className="size-4" />
             </Button>
           </div>
         </div>

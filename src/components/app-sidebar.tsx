@@ -75,13 +75,11 @@ function WorkspaceNavItem({
   label,
   icon: Icon,
   active,
-  notify,
 }: {
   href: string;
   label: string;
   icon: LucideIcon;
   active: boolean;
-  notify?: boolean;
 }) {
   return (
     <SidebarMenuItem className="px-1">
@@ -98,9 +96,6 @@ function WorkspaceNavItem({
       >
         <Icon className={cn("size-[18px]", active ? "text-primary" : "text-muted-foreground/80")} />
         <span className="flex-1">{label}</span>
-        {notify ? (
-          <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden />
-        ) : null}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -282,8 +277,7 @@ function SchoolContextCard({ variant }: { variant: "card" | "icon" }) {
 function KurikulumSidebarNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { activeJadwalId, validated, openKonflik } = useJadwal();
-  const conflictCount = validated ? openKonflik.length : 0;
+  const { activeJadwalId } = useJadwal();
 
   const jadwalHref = jadwalDetailHref(activeJadwalId);
   const konflikHref = jadwalKonflikHref(activeJadwalId);
@@ -322,7 +316,6 @@ function KurikulumSidebarNav() {
               label="AI Conflict Predictor"
               icon={Sparkles}
               active={konflikActive}
-              notify={conflictCount > 0}
             />
             <WorkspaceNavItem
               href="/ai/tanya"
