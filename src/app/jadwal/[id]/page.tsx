@@ -64,7 +64,7 @@ function JadwalDetailInner() {
     void (async () => {
       for (const j of jadwalList) {
         if (j.id === jadwalId) continue;
-        const rows = await api.getJadwalKelasAktif(j.id);
+        const rows = await api.getJadwalKelasAktif(j.id, { ringkas: true });
         if (Array.isArray(rows) && rows.length > 0) {
           setAltJadwalId(j.id);
           return;

@@ -158,7 +158,9 @@ export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
     const mapel = catalog.mataPelajaran
       .map((m) => ({ value: m.id, label: m.nama }))
       .sort((a, b) => a.label.localeCompare(b.label, "id"));
-    const hari = catalog.hari.map((h) => ({ value: h.id, label: h.nama }));
+    const hari = catalog.hari
+      .filter((h) => !h.akhir_pekan)
+      .map((h) => ({ value: h.id, label: h.nama }));
     const jam = catalog.jam
       .filter((j) => !j.istirahat)
       .map((j) => ({
@@ -255,7 +257,7 @@ export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
           ruangan_id: b.ruangan_id || undefined,
         })),
       );
-      await loadJadwal(jadwalId);
+      await loadJadwal(jadwalId, { paksa: true });
       ubahBuka(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan jadwal.");

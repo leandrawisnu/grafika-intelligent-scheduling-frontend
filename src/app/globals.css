@@ -97,7 +97,7 @@
   --text-body: 1rem;
   --leading-body: 1.5;
   --tracking-tight-display: -0.03em;
-  --page-max-width: 75rem;
+  --page-max-width: 100rem;
   --section-gap: 2rem;
   --sidebar: oklch(0.962 0.012 247);
   --sidebar-foreground: oklch(0.3 0.028 247);

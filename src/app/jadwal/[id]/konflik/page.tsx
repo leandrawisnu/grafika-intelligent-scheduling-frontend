@@ -1,15 +1,18 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScheduleGrid } from "@/components/schedule-grid";
 import { GisPanel } from "@/components/gis-surface";
 import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
-import { conflictTypeLabel } from "@/lib/conflict-display";
+import { KelasGridFilter, awalKelasId } from "@/components/kelas-grid-filter";
+import { conflictRowSummary, conflictTypeLabel, groupKonflikByType, konflikMenyentuhKelas } from "@/lib/conflict-display";
+import { nestedKelas } from "@/lib/jadwal-labels";
 import { cn } from "@/lib/utils";
 import type { Konflik, SlotJadwal } from "@/lib/types";
 
@@ -42,18 +45,73 @@ function DaftarKonflikInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const catalog = useCatalog();
-  const { loadJadwal, openKonflik, slots, validated, validating, predicting, runValidasi, runPrediksiMl } = useJadwal();
+  const {
+    loadJadwal,
+    openKonflik,
+    slots,
+    validated,
+    validating,
+    predicting,
+    runValidasi,
+    runPrediksiMl,
+    jadwal,
+    jadwalKelasAktif,
+  } = useJadwal();
+  const [filterKelasId, setFilterKelasId] = useState<string | null>(null);
+  const [tipeTab, setTipeTab] = useState<string | null>(null);
 
   useEffect(() => {
     if (jadwalId) void loadJadwal(jadwalId);
   }, [jadwalId, loadJadwal]);
 
-  const selected = openKonflik.find((k) => k.id === searchParams.get("pilih")) ?? openKonflik[0] ?? null;
+  const kelasInJadwal = useMemo(() => {
+    const rows = jadwalKelasAktif.length > 0
+      ? jadwalKelasAktif
+      : (jadwal?.jadwal_kelas ?? []).filter((jk) => jk.is_active);
+    return rows
+      .map((jk) => {
+        const id = jk.kelas_id;
+        const nested = nestedKelas(jk);
+        const fromCatalog = catalog.kelas.find((k) => k.id === id)?.nama;
+        const nama = nested?.nama ?? fromCatalog;
+        return { id, nama: nama && nama !== id ? nama : "—" };
+      })
+      .sort((a, b) => a.nama.localeCompare(b.nama, "id"));
+  }, [jadwalKelasAktif, jadwal, catalog.kelas]);
+
+  const kelasFilterId = filterKelasId ?? awalKelasId(kelasInJadwal);
+
+  useEffect(() => {
+    if (filterKelasId !== null) return;
+    const awal = awalKelasId(kelasInJadwal);
+    if (awal) setFilterKelasId(awal);
+  }, [filterKelasId, kelasInJadwal]);
+
+  const visible = useMemo(
+    () => openKonflik.filter((item) => konflikMenyentuhKelas(item, kelasFilterId, slots)),
+    [openKonflik, kelasFilterId, slots],
+  );
+  const groups = useMemo(() => groupKonflikByType(visible), [visible]);
+  const activeType = groups.some((group) => group.type === tipeTab)
+    ? tipeTab
+    : groups.find((group) => group.items.some((item) => item.id === searchParams.get("pilih")))?.type
+      ?? groups[0]?.type
+      ?? null;
+  const activeItems = groups.find((group) => group.type === activeType)?.items ?? [];
+  const selected = activeItems.find((k) => k.id === searchParams.get("pilih")) ?? activeItems[0] ?? null;
   const preview = pratinjau(selected, slots);
   const guruLabel = namaBukanId(catalog.guruName(preview.guruId), preview.guruId);
 
   const pilih = (id: string) => {
+    const item = visible.find((row) => row.id === id);
+    if (item) setTipeTab(item.tipe_konflik);
     router.replace(`/jadwal/${jadwalId}/konflik?pilih=${id}`);
+  };
+
+  const gantiTipe = (type: string) => {
+    setTipeTab(type);
+    const first = groups.find((group) => group.type === type)?.items[0];
+    if (first && first.id !== selected?.id) pilih(first.id);
   };
 
   return (
@@ -83,33 +141,54 @@ function DaftarKonflikInner() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
           <section className="space-y-2">
+            <KelasGridFilter
+              kelas={kelasInJadwal}
+              value={kelasFilterId}
+              onChange={setFilterKelasId}
+              requireSelection={false}
+            />
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-medium">Potensi konflik</h2>
-              <span className="text-xs text-muted-foreground">{openKonflik.length} ditemukan</span>
+              <span className="text-xs text-muted-foreground">{visible.length} ditemukan</span>
             </div>
             {openKonflik.length === 0 ? (
               <GisPanel className="px-4 py-6 text-sm text-muted-foreground">Tidak ada konflik terbuka.</GisPanel>
+            ) : visible.length === 0 ? (
+              <GisPanel className="px-4 py-6 text-sm text-muted-foreground">Tidak ada konflik untuk kelas ini.</GisPanel>
             ) : (
-              <ul className="space-y-2">
-                {openKonflik.map((item) => {
-                  const active = item.id === selected?.id;
-                  return (
-                    <li key={item.id}>
-                      <button
-                        type="button"
-                        onClick={() => pilih(item.id)}
-                        className={cn(
-                          "w-full rounded-[var(--radius-card)] border px-3 py-3 text-left",
-                          active ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted/50",
-                        )}
-                      >
-                        <p className="text-sm font-medium">{conflictTypeLabel(item.tipe_konflik)}</p>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.deskripsi}</p>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+              <Tabs value={activeType ?? ""} onValueChange={(value) => { if (value) gantiTipe(value); }}>
+                <TabsList className="h-auto w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto">
+                  {groups.map((group) => (
+                    <TabsTrigger key={group.type} value={group.type}>
+                      {conflictTypeLabel(group.type)}
+                      <span className="text-xs tabular-nums text-muted-foreground">{group.items.length}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <ul className="max-h-80 overflow-y-auto rounded-[var(--radius-card)] border border-border bg-card">
+                  {activeItems.map((item) => {
+                    const active = item.id === selected?.id;
+                    const row = conflictRowSummary(item, catalog.guruName);
+                    return (
+                      <li key={item.id} className="border-b border-border last:border-b-0">
+                        <button
+                          type="button"
+                          onClick={() => pilih(item.id)}
+                          className={cn(
+                            "flex w-full items-center justify-between gap-3 px-3 py-2 text-left",
+                            active ? "bg-primary/5" : "hover:bg-muted/50",
+                          )}
+                        >
+                          <span className="min-w-0 truncate text-sm">{row.title}</span>
+                          {row.detail ? (
+                            <span className="shrink-0 text-xs text-muted-foreground">{row.detail}</span>
+                          ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Tabs>
             )}
           </section>
 
@@ -117,7 +196,7 @@ function DaftarKonflikInner() {
             <div className="border-b border-border px-4 py-4">
               <h2 className="text-base font-semibold">{preview.judul}</h2>
               <p className="text-sm text-muted-foreground">
-                {guruLabel ?? selected?.deskripsi ?? "Pilih konflik untuk melihat jadwal yang terlibat."}
+                {selected?.deskripsi ?? guruLabel ?? "Pilih konflik untuk melihat jadwal yang terlibat."}
               </p>
             </div>
             <ScheduleGrid

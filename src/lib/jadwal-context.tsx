@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -31,8 +32,8 @@ function flattenSlots(jadwalKelas: JadwalKelas[]): SlotJadwal[] {
 }
 
 async function jadwalHasKelasAktif(id: string): Promise<boolean> {
-  const rows = await api.getJadwalKelasAktif(id);
-  return Array.isArray(rows) && rows.length > 0;
+  const rows = await api.getJadwalKelasAktif(id, { ringkas: true });
+  return rows.length > 0;
 }
 
 async function pickJadwalId(list: JadwalSemester[], stored: string | null): Promise<string | null> {
@@ -73,7 +74,7 @@ type JadwalStore = {
   setGridKelasId: (id: string) => void;
   setSelectedConflictId: (id: string | null) => void;
   refreshList: () => Promise<JadwalSemester[]>;
-  loadJadwal: (id: string) => Promise<void>;
+  loadJadwal: (id: string, opsi?: { paksa?: boolean }) => Promise<void>;
   createJadwal: (semesterId: string) => Promise<JadwalSemester>;
   runValidasi: () => Promise<void>;
   runPrediksiMl: () => Promise<void>;
@@ -100,6 +101,8 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const [predicting, setPredicting] = useState(false);
   const [gridKelasId, setGridKelasId] = useState("");
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
+  const loadedIdRef = useRef<string | null>(null);
+  const muatBerjalan = useRef(new Map<string, Promise<void>>());
 
   const setActiveJadwalId = useCallback((id: string) => {
     setActiveJadwalIdState(id);
@@ -119,25 +122,47 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadJadwal = useCallback(
-    async (id: string) => {
-      setLoading(true);
-      setError(null);
+    async (id: string, opsi?: { paksa?: boolean }) => {
+      if (!opsi?.paksa && loadedIdRef.current === id) return;
+      if (!opsi?.paksa) {
+        const berjalan = muatBerjalan.current.get(id);
+        if (berjalan) return berjalan;
+      }
+
+      const tugas = (async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const [detail, kelasAktif, rows] = await Promise.all([
+            api.getJadwalSemesterById(id),
+            api.getJadwalKelasAktif(id),
+            api.getKonflik(id),
+          ]);
+          const list = Array.isArray(kelasAktif) ? kelasAktif : [];
+          const k = Array.isArray(rows) ? rows : [];
+          setJadwal(detail);
+          setActiveJadwalId(id);
+          setJadwalKelasAktif(list);
+          setSlots(flattenSlots(list));
+          setKonflik(k);
+          setValidated(k.length > 0 || detail.bebas_konflik);
+          loadedIdRef.current = id;
+        } catch (e) {
+          loadedIdRef.current = null;
+          setError(e instanceof Error ? e.message : "Gagal memuat jadwal");
+        } finally {
+          setLoading(false);
+        }
+      })();
+
+      muatBerjalan.current.set(id, tugas);
       try {
-        const detail = await api.getJadwalSemesterById(id);
-        setJadwal(detail);
-        setActiveJadwalId(id);
-        await loadSlotsFor(id);
-        const rows = await api.getKonflik(id);
-        const k = Array.isArray(rows) ? rows : [];
-        setKonflik(k);
-        setValidated(k.length > 0 || detail.bebas_konflik);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Gagal memuat jadwal");
+        await tugas;
       } finally {
-        setLoading(false);
+        if (muatBerjalan.current.get(id) === tugas) muatBerjalan.current.delete(id);
       }
     },
-    [loadSlotsFor, setActiveJadwalId]
+    [setActiveJadwalId]
   );
 
   const refreshList = useCallback(async () => {
