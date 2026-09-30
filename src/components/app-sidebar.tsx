@@ -300,10 +300,10 @@ function KurikulumSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu className={sidebarMenuGap}>
             <WorkspaceNavItem
-              href="/"
+              href="/beranda"
               label="Beranda"
               icon={House}
-              active={pathname === "/"}
+              active={pathname === "/beranda"}
             />
             <WorkspaceNavItem
               href={jadwalHref}
@@ -354,10 +354,10 @@ function KoorSidebarNav() {
         <SidebarGroupContent>
           <SidebarMenu className={sidebarMenuGap}>
             <WorkspaceNavItem
-              href="/"
+              href="/beranda"
               label="Beranda"
               icon={House}
-              active={pathname === "/"}
+              active={pathname === "/beranda"}
             />
             <WorkspaceNavItem
               href={jadwalHref}
