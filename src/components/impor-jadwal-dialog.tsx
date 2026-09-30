@@ -136,13 +136,7 @@ function statusTeks(status: StatusImpor) {
   return "Perlu pilihan";
 }
 
-export function ImporJadwalDialog({
-  jadwalId,
-  disabled,
-}: {
-  jadwalId: string;
-  disabled: boolean;
-}) {
+export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
   const catalog = useCatalog();
   const { jadwal, loadJadwal } = useJadwal();
   const [open, setOpen] = useState(false);
@@ -164,7 +158,9 @@ export function ImporJadwalDialog({
     const mapel = catalog.mataPelajaran
       .map((m) => ({ value: m.id, label: m.nama }))
       .sort((a, b) => a.label.localeCompare(b.label, "id"));
-    const hari = catalog.hari.map((h) => ({ value: h.id, label: h.nama }));
+    const hari = catalog.hari
+      .filter((h) => !h.akhir_pekan)
+      .map((h) => ({ value: h.id, label: h.nama }));
     const jam = catalog.jam
       .filter((j) => !j.istirahat)
       .map((j) => ({
@@ -261,7 +257,7 @@ export function ImporJadwalDialog({
           ruangan_id: b.ruangan_id || undefined,
         })),
       );
-      await loadJadwal(jadwalId);
+      await loadJadwal(jadwalId, { paksa: true });
       ubahBuka(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan jadwal.");
@@ -272,7 +268,7 @@ export function ImporJadwalDialog({
 
   return (
     <>
-      <Button type="button" variant="outline" disabled={disabled} onClick={() => ubahBuka(true)}>
+      <Button type="button" variant="outline" onClick={() => ubahBuka(true)}>
         <Upload className="mr-1.5 size-4" />
         Unggah jadwal
       </Button>

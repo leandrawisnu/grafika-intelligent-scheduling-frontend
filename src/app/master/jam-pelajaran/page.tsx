@@ -13,7 +13,7 @@ export default function JamPelajaranPage() {
         { key: "waktu_mulai", label: "Mulai" },
         { key: "waktu_selesai", label: "Selesai" },
       ]}
-      fetchData={api.getJamPelajaran}
+      fetchData={api.listJamPelajaran}
       onCreate={(d) => api.createJamPelajaran(d)}
       onUpdate={(id, d) => api.updateJamPelajaran(id, d)}
       onDelete={(id) => api.deleteJamPelajaran(id)}

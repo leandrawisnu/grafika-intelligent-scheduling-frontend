@@ -16,6 +16,17 @@ function parseJurusan(nama: string): string | null {
   return parts[1];
 }
 
+export function awalKelasId(kelas: { id: string; nama: string }[]) {
+  const codes = new Set<string>();
+  for (const row of kelas) {
+    const code = parseJurusan(row.nama);
+    if (code) codes.add(code);
+  }
+  const first = [...codes].sort((a, b) => a.localeCompare(b, "id"))[0];
+  const pool = first ? kelas.filter((row) => parseJurusan(row.nama) === first) : kelas;
+  return [...pool].sort((a, b) => a.nama.localeCompare(b.nama, "id"))[0]?.id ?? "";
+}
+
 export function KelasGridFilter({
   kelas,
   value,
@@ -54,12 +65,13 @@ export function KelasGridFilter({
   useEffect(() => {
     if (filteredKelas.length === 0) return;
     if (!value || !filteredKelas.some((k) => k.id === value)) {
-      if (requireSelection) onChange(filteredKelas[0].id);
-      else if (value) onChange("");
+      if (requireSelection || value) onChange(filteredKelas[0].id);
     }
   }, [filteredKelas, value, onChange, requireSelection]);
 
-  const kelasLabel = kelas.find((k) => k.id === value)?.nama ?? "Pilih kelas";
+  const kelasLabel = !requireSelection && !value
+    ? `Semua kelas (${jurusan ? filteredKelas.length : kelas.length})`
+    : (kelas.find((k) => k.id === value)?.nama ?? "Pilih kelas");
 
   if (kelas.length === 0) {
     return (

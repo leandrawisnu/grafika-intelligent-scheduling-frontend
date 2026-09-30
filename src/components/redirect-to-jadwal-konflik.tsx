@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useJadwal } from "@/lib/jadwal-context";
 import { jadwalKonflikHref } from "@/lib/navigation";
 
-/** Redirect legacy /ai/konflik dan /ai/selesaikan ke tab konflik jadwal aktif. */
+/** Redirect legacy /ai/konflik dan /ai/selesaikan ke halaman daftar konflik. */
 export function RedirectToJadwalKonflik({ label }: { label: string }) {
   const router = useRouter();
   const { activeJadwalId } = useJadwal();
@@ -18,14 +18,14 @@ export function RedirectToJadwalKonflik({ label }: { label: string }) {
 
   if (activeJadwalId) {
     return (
-      <p className="text-sm text-muted-foreground">Mengarahkan ke tab konflik jadwal…</p>
+      <p className="text-sm text-muted-foreground">Mengarahkan ke daftar konflik…</p>
     );
   }
 
   return (
     <div className="space-y-2">
       <p className="text-sm text-muted-foreground">
-        {label} sekarang di tab <strong>Konflik</strong> pada jadwal semester.
+        {label} sekarang ada di daftar konflik jadwal semester.
       </p>
       <p className="text-sm text-muted-foreground">
         Belum ada jadwal aktif. Buat di{" "}

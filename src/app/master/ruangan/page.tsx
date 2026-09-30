@@ -13,7 +13,7 @@ export default function RuanganPage() {
         { key: "nama", label: "Nama Ruangan" },
         { key: "kapasitas", label: "Kapasitas", type: "number" },
       ]}
-      fetchData={api.getRuangan}
+      fetchData={api.listRuangan}
       onCreate={(d) => api.createRuangan(d)}
       onUpdate={(id, d) => api.updateRuangan(id, d)}
       onDelete={(id) => api.deleteRuangan(id)}

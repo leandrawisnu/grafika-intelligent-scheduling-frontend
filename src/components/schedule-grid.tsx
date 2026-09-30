@@ -8,7 +8,7 @@ import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ScheduleSlotCard } from "@/components/schedule-slot-card";
-import { legendTonesFromMapel, toneForMapel } from "@/lib/schedule-mapel-tone";
+import { legendTonesFromMapel, toneForMapel, type JurusanTone } from "@/lib/schedule-mapel-tone";
 import type { Konflik, SlotJadwal } from "@/lib/types";
 
 export function ScheduleGrid({
@@ -21,6 +21,7 @@ export function ScheduleGrid({
   hideBreaks = true,
   embedded = false,
   showFooter = true,
+  showAllInCell = false,
   onSlotClick,
 }: {
   kelasId?: string | null;
@@ -32,6 +33,7 @@ export function ScheduleGrid({
   hideBreaks?: boolean;
   embedded?: boolean;
   showFooter?: boolean;
+  showAllInCell?: boolean;
   onSlotClick?: (slot: SlotJadwal, conflicts: Konflik[]) => void;
 }) {
   const catalog = useCatalog();
@@ -73,6 +75,16 @@ export function ScheduleGrid({
     return counts;
   }, [visible, displayHari]);
 
+  const jurusanFokus = useMemo<JurusanTone | null>(() => {
+    if (!kelasId) return null;
+    const kelas = catalog.kelas.find((k) => k.id === kelasId);
+    if (!kelas) return null;
+    const row = catalog.jurusan.find((j) => j.id === kelas.jurusan_id);
+    if (row) return { kode: row.kode, nama: row.nama };
+    const kode = kelas.nama.trim().split(/\s+/)[1];
+    return kode ? { kode, nama: kode } : null;
+  }, [kelasId, catalog.kelas, catalog.jurusan]);
+
   const legend = useMemo(() => {
     const mapelEntries = visible.map((s) => ({
       id: s.mata_pelajaran_id,
@@ -80,8 +92,8 @@ export function ScheduleGrid({
     }));
     const unique = new Map<string, { id: string; name: string }>();
     for (const e of mapelEntries) unique.set(e.id, e);
-    return legendTonesFromMapel([...unique.values()]);
-  }, [visible, catalog]);
+    return legendTonesFromMapel([...unique.values()], jurusanFokus);
+  }, [visible, catalog, jurusanFokus]);
 
   if (catalog.loading) {
     return <p className="text-sm text-muted-foreground">Memuat grid…</p>;
@@ -118,11 +130,12 @@ export function ScheduleGrid({
     <ScrollArea
       data-component="GIS/ScheduleGrid"
       className={cn(
+        "w-full",
         embedded ? "h-[min(58vh,36rem)]" : "h-[min(65vh,40rem)]",
         !embedded && "rounded-[var(--radius-card)] border border-border bg-card"
       )}
     >
-      <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+      <table className="w-full min-w-[720px] table-fixed border-collapse text-left text-sm">
         <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
           <tr className="border-b border-border">
             <th className="w-28 px-3 py-3 text-xs font-medium text-muted-foreground">Waktu</th>
@@ -147,7 +160,7 @@ export function ScheduleGrid({
               </th>
               {displayHari.map((hari) => {
                 const cellSlots = at(hari.id, jam.id);
-                const showAggregate = !focused && cellSlots.length > 1;
+                const showAggregate = !showAllInCell && !focused && cellSlots.length > 1;
                 return (
                   <td
                     key={hari.id}
@@ -172,7 +185,7 @@ export function ScheduleGrid({
                           const top = conflicts[0];
                           const unplotted = !slot.guru_id;
                           const mapelName = catalog.mapelName(slot.mata_pelajaran_id);
-                          const tone = toneForMapel(slot.mata_pelajaran_id, mapelName);
+                          const tone = toneForMapel(slot.mata_pelajaran_id, mapelName, jurusanFokus);
                           return (
                             <ScheduleSlotCard
                               key={slot.id}

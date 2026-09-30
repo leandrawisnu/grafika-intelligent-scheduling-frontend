@@ -36,48 +36,93 @@ async function requestList<T>(path: string, options?: RequestInit): Promise<T[]>
   return Array.isArray(data) ? data : [];
 }
 
+export type TableQuery = {
+  page: number;
+  q: string;
+  sort: string;
+  filters: Record<string, string>;
+};
+
+export type TablePage<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  per_page: number;
+};
+
+function masterPagePath(path: string, query: TableQuery): string {
+  const params = new URLSearchParams();
+  params.set("page", String(Math.max(1, query.page)));
+  const q = query.q.trim();
+  if (q) params.set("q", q);
+  if (query.sort && query.sort !== "default") params.set("sort", query.sort);
+  for (const [key, value] of Object.entries(query.filters)) {
+    if (value) params.set(key, value);
+  }
+  const join = path.includes("?") ? "&" : "?";
+  return `${path}${join}${params.toString()}`;
+}
+
+async function requestMasterPage<T>(path: string, query: TableQuery): Promise<TablePage<T>> {
+  const body = await request<Partial<TablePage<T>>>(masterPagePath(path, query));
+  return {
+    data: Array.isArray(body.data) ? body.data : [],
+    total: body.total ?? 0,
+    page: body.page ?? query.page,
+    per_page: body.per_page ?? 10,
+  };
+}
+
 export const api = {
   // Data Master
   getTahunAjaran: () => requestList<TahunAjaran>("/tahun-ajaran"),
+  listTahunAjaran: (query: TableQuery) => requestMasterPage<TahunAjaran>("/tahun-ajaran", query),
   createTahunAjaran: (d: Partial<TahunAjaran>) => request<TahunAjaran>("/tahun-ajaran", { method: "POST", body: JSON.stringify(d) }),
   updateTahunAjaran: (id: string, d: Partial<TahunAjaran>) => request<TahunAjaran>(`/tahun-ajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteTahunAjaran: (id: string) => request<{status: string}>(`/tahun-ajaran/${id}`, { method: "DELETE" }),
 
   getSemester: (tahunAjaranId?: string) =>
     requestList<Semester>(`/semester${tahunAjaranId ? `?tahun_ajaran_id=${tahunAjaranId}` : ""}`),
+  listSemester: (query: TableQuery) => requestMasterPage<Semester>("/semester", query),
   createSemester: (d: Partial<Semester>) => request<Semester>("/semester", { method: "POST", body: JSON.stringify(d) }),
   updateSemester: (id: string, d: Partial<Semester>) =>
     request<Semester>(`/semester/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteSemester: (id: string) => request<{ status: string }>(`/semester/${id}`, { method: "DELETE" }),
 
   getJurusan: () => requestList<Jurusan>("/jurusan"),
+  listJurusan: (query: TableQuery) => requestMasterPage<Jurusan>("/jurusan", query),
   createJurusan: (d: Partial<Jurusan>) => request<Jurusan>("/jurusan", { method: "POST", body: JSON.stringify(d) }),
   updateJurusan: (id: string, d: Partial<Jurusan>) => request<Jurusan>(`/jurusan/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteJurusan: (id: string) => request<{status: string}>(`/jurusan/${id}`, { method: "DELETE" }),
 
   getGuru: () => requestList<Guru>("/guru"),
+  listGuru: (query: TableQuery) => requestMasterPage<Guru>("/guru", query),
   createGuru: (d: Partial<Guru>) => request<Guru>("/guru", { method: "POST", body: JSON.stringify(d) }),
   updateGuru: (id: string, d: Partial<Guru>) => request<Guru>(`/guru/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteGuru: (id: string) => request<{status: string}>(`/guru/${id}`, { method: "DELETE" }),
 
   getMataPelajaran: () => requestList<MataPelajaran>("/mata-pelajaran"),
+  listMataPelajaran: (query: TableQuery) => requestMasterPage<MataPelajaran>("/mata-pelajaran", query),
   createMataPelajaran: (d: Partial<MataPelajaran>) => request<MataPelajaran>("/mata-pelajaran", { method: "POST", body: JSON.stringify(d) }),
   updateMataPelajaran: (id: string, d: Partial<MataPelajaran>) => request<MataPelajaran>(`/mata-pelajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteMataPelajaran: (id: string) => request<{status: string}>(`/mata-pelajaran/${id}`, { method: "DELETE" }),
 
   getKelas: (semesterId?: string) =>
     requestList<Kelas>(`/kelas${semesterId ? `?semester_id=${semesterId}` : ""}`),
+  listKelas: (query: TableQuery) => requestMasterPage<Kelas>("/kelas", query),
   createKelas: (d: Partial<Kelas>) => request<Kelas>("/kelas", { method: "POST", body: JSON.stringify(d) }),
   updateKelas: (id: string, d: Partial<Kelas>) => request<Kelas>(`/kelas/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteKelas: (id: string) => request<{status: string}>(`/kelas/${id}`, { method: "DELETE" }),
 
   getRuangan: () => requestList<Ruangan>("/ruangan"),
+  listRuangan: (query: TableQuery) => requestMasterPage<Ruangan>("/ruangan", query),
   createRuangan: (d: Partial<Ruangan>) => request<Ruangan>("/ruangan", { method: "POST", body: JSON.stringify(d) }),
   updateRuangan: (id: string, d: Partial<Ruangan>) => request<Ruangan>(`/ruangan/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteRuangan: (id: string) => request<{status: string}>(`/ruangan/${id}`, { method: "DELETE" }),
 
   getHari: () => requestList<Hari>("/hari"),
   getJamPelajaran: () => requestList<JamPelajaran>("/jam-pelajaran"),
+  listJamPelajaran: (query: TableQuery) => requestMasterPage<JamPelajaran>("/jam-pelajaran", query),
   createJamPelajaran: (d: Partial<JamPelajaran>) => request<JamPelajaran>("/jam-pelajaran", { method: "POST", body: JSON.stringify(d) }),
   updateJamPelajaran: (id: string, d: Partial<JamPelajaran>) => request<JamPelajaran>(`/jam-pelajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteJamPelajaran: (id: string) => request<{status: string}>(`/jam-pelajaran/${id}`, { method: "DELETE" }),
@@ -90,9 +135,6 @@ export const api = {
   getJadwalSemester: () => requestList<JadwalSemester>("/jadwal-semester"),
   getJadwalSemesterById: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}`),
   updateStatus: (id: string, status: string) => request<JadwalSemester>(`/jadwal-semester/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
-  publikasi: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}/publikasi`, { method: "POST" }),
-  batalkanPublikasi: (id: string) => request<JadwalSemester>(`/jadwal-semester/${id}/batalkan-publikasi`, { method: "POST" }),
-  cekKesiapan: (id: string) => request<{siap: boolean; pesan: string}>(`/jadwal-semester/${id}/kesiapan`),
 
   // Jurusan dalam jadwal semester
   tambahJurusan: (id: string, jurusanIds: string[]) =>
@@ -104,8 +146,10 @@ export const api = {
   createJadwalKelas: (jsId: string, d: { kelas_id: string }) =>
     request<JadwalKelas>(`/jadwal-semester/${jsId}/jadwal-kelas`, { method: "POST", body: JSON.stringify(d) }),
   getJadwalKelas: (id: string) => request<JadwalKelas>(`/jadwal-kelas/${id}`),
-  getJadwalKelasAktif: (jsId: string) =>
-    requestList<JadwalKelas>(`/jadwal-semester/${jsId}/jadwal-kelas-aktif`),
+  getJadwalKelasAktif: (jsId: string, opsi?: { ringkas?: boolean }) =>
+    requestList<JadwalKelas>(
+      `/jadwal-semester/${jsId}/jadwal-kelas-aktif${opsi?.ringkas ? "?ringkas=1" : ""}`,
+    ),
 
   pratinjauImpor: (jsId: string, berkas: File) => {
     const body = new FormData();
@@ -150,7 +194,10 @@ export const api = {
 
   // AI
   selesaikanKonflik: (konflikId: string) =>
-    request<{alternatif: any[]}>(`/konflik/${konflikId}/selesaikan`, { method: "POST" }),
+    request<{ alternatif: { id: string; peringkat: number; label: string; penjelasan: string }[] }>(
+      `/konflik/${konflikId}/selesaikan`,
+      { method: "POST" },
+    ),
   getResolusi: (konflikId: string) => request<any[]>(`/konflik/${konflikId}/resolusi`),
   terimaResolusi: (resolusiId: string) => request<{status: string}>(`/resolusi/${resolusiId}/terima`, { method: "POST" }),
   jelaskanKonflik: (konflikId: string) => request<any>(`/konflik/${konflikId}/jelaskan`, { method: "POST" }),

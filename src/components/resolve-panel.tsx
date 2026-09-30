@@ -7,13 +7,7 @@ import { AiBadge } from "@/components/ai-badge";
 import { cn } from "@/lib/utils";
 import { CONFLICT_LABEL, type PrototypeConflict } from "@/lib/prototype-types";
 
-export function ResolvePanel({
-  conflict,
-  published = false,
-}: {
-  conflict: PrototypeConflict;
-  published?: boolean;
-}) {
+export function ResolvePanel({ conflict }: { conflict: PrototypeConflict }) {
   const [appliedAlt, setAppliedAlt] = useState<string | null>(null);
   const [resolved, setResolved] = useState(conflict.resolved);
   const applied = appliedAlt;
@@ -102,7 +96,6 @@ export function ResolvePanel({
               ) : null}
               <Button
                 className="mt-4"
-                disabled={published}
                 onClick={() => {
                   setAppliedAlt(alt.id);
                   setResolved(true);

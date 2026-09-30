@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
+import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
 import { usePrototype } from "@/lib/prototype-store";
 import { cn } from "@/lib/utils";
 
@@ -21,12 +22,11 @@ export default function GuruJadwalPage() {
   const router = useRouter();
   const catalog = useCatalog();
   const {
-    published,
     slots,
     activeJadwalId,
     jadwalList,
     semesterLabel,
-    setActiveJadwalId,
+    loadJadwal,
     openKonflik,
     validated,
   } = useJadwal();
@@ -34,7 +34,7 @@ export default function GuruJadwalPage() {
 
   const [selectedGuruId, setSelectedGuruId] = useState<string | null>(null);
 
-  const displaySlots = published ? slots : [];
+  const displaySlots = slots;
   const activeGuru = catalog.guru.filter((g) => g.aktif);
 
   const filteredSlots = useMemo(() => {
@@ -62,15 +62,13 @@ export default function GuruJadwalPage() {
         <div>
           <h1 className="gis-page-title">Jadwal mengajar</h1>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            {published
-              ? "Ringkasan jadwal terbit untuk guru aktif."
-              : "Jadwal belum dipublikasikan — grid kosong sampai kurikulum mempublikasikan."}
+            Ringkasan jadwal mengajar untuk guru aktif.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select
             value={activeJadwalId ?? undefined}
-            onValueChange={(v) => v && setActiveJadwalId(v)}
+            onValueChange={(v) => v && void loadJadwal(v)}
             disabled={jadwalList.length === 0}
           >
             <SelectTrigger size="sm" className="min-w-[11rem]">
@@ -81,7 +79,7 @@ export default function GuruJadwalPage() {
             <SelectContent>
               {jadwalList.map((j) => (
                 <SelectItem key={j.id} value={j.id}>
-                  {j.semester?.nama ?? j.id}
+                  {jadwalSemesterLabel(j)}
                 </SelectItem>
               ))}
             </SelectContent>
