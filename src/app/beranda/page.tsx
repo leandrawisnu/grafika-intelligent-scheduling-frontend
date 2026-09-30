@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AiInsightBar } from "@/components/ai-insight-bar";
-import { WorkflowStepper } from "@/components/workflow-stepper";
-import { ConflictList } from "@/components/conflict-list";
+import { conflictTypeLabel, groupKonflikByType } from "@/lib/conflict-display";
 import { useJadwal } from "@/lib/jadwal-context";
 import { usePrototype } from "@/lib/prototype-store";
 import { jadwalKonflikHref } from "@/lib/navigation";
-import { GisPanel, GisSectionHeading, GisStatTile } from "@/components/gis-surface";
+import { GisPanel, GisStatTile } from "@/components/gis-surface";
+import { cn } from "@/lib/utils";
+
+const angka = new Intl.NumberFormat("id-ID");
 
 export default function Dashboard() {
-  const router = useRouter();
   const { role } = usePrototype();
   const {
     activeJadwalId,
@@ -21,13 +21,11 @@ export default function Dashboard() {
     steps,
     validated,
     validating,
-    conflictItems,
     openKonflik,
     errorCount,
     warningCount,
     unplotted,
     runValidasi,
-    setSelectedConflictId,
     jadwal,
   } = useJadwal();
 
@@ -61,109 +59,136 @@ export default function Dashboard() {
   const jsHref = activeJadwalId ? `/jadwal/${activeJadwalId}` : "/jadwal";
   const konflikHref = jadwalKonflikHref(activeJadwalId);
   const currentStep = steps.find((s) => s.status === "current");
+  const ringkasan = groupKonflikByType(openKonflik)
+    .map((group) => ({ type: group.type, jumlah: group.items.length }))
+    .sort((a, b) => b.jumlah - a.jumlah);
 
-  const insightTitle = !validated
-    ? "Validasi konflik belum dijalankan"
-    : openKonflik.length === 0
-      ? "Tidak ada konflik terbuka."
-      : `${openKonflik.length} konflik menunggu keputusan kurikulum`;
+  const jumlahJurusan = jadwal?.jurusan?.length ?? 0;
 
-  const insightDetail = !validated
-    ? "Validasi memeriksa bentrok guru, ruangan, dan aturan jam dari database."
-    : openKonflik.length > 0
-      ? `${errorCount} kesalahan, ${warningCount} peringatan.`
-      : "Semua konflik terselesaikan atau tidak ada.";
-
-  const jurusanLabel =
-    jadwal?.jurusan
-      ?.map((j) => j.jurusan?.kode ?? j.jurusan?.nama)
-      .filter(Boolean)
-      .join(", ") || "—";
+  const pintasan = [
+    { href: jsHref, label: "Grid jadwal" },
+    { href: `${jsHref}?tab=plotting`, label: "Plotting guru" },
+    { href: "/ai/tanya", label: "Bantuan AI" },
+  ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-semibold tracking-wide text-primary/80">{semesterLabel}</p>
-          <h1 className="gis-page-title mt-1">Beranda</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Alur kurikulum: plotting guru, lalu validasi dan perbaikan konflik.
-          </p>
+          <h1 className="gis-page-title">Beranda</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{semesterLabel}</p>
         </div>
         {currentStep ? (
           <Link href={currentStep.href} className={buttonVariants()}>
-            Langkah berikutnya: {currentStep.label}
+            {currentStep.label}
             <ArrowRight className="ml-1.5 size-4" />
           </Link>
         ) : null}
       </div>
 
-      <GisPanel className="p-4">
-        <WorkflowStepper steps={steps} />
-      </GisPanel>
-
-      <AiInsightBar
-        title={insightTitle}
-        detail={insightDetail}
-        meta={validating ? "Memvalidasi…" : validated ? "Validasi pada sesi ini" : "Belum dijalankan"}
-      >
-        {!validated ? (
-          <Button onClick={() => void runValidasi()} disabled={validating || !activeJadwalId}>
-            <Sparkles className="mr-1.5 size-4" />
+      {!validated ? (
+        <AiInsightBar title="Validasi belum dijalankan" detail="Bentrok dihitung setelah jadwal diperiksa.">
+          <Button size="sm" onClick={() => void runValidasi()} disabled={validating || !activeJadwalId}>
             {validating ? "Memvalidasi…" : "Jalankan validasi"}
           </Button>
-        ) : openKonflik.length > 0 ? (
-          <Link href={konflikHref} className={buttonVariants()}>
+        </AiInsightBar>
+      ) : openKonflik.length > 0 ? (
+        <AiInsightBar
+          title={`${angka.format(openKonflik.length)} konflik menunggu`}
+          detail={`${angka.format(errorCount)} kesalahan, ${angka.format(warningCount)} peringatan.`}
+        >
+          <Link href={konflikHref} className={buttonVariants({ size: "sm" })}>
             Tinjau konflik
-            <ArrowRight className="ml-1.5 size-4" />
           </Link>
-        ) : null}
-      </AiInsightBar>
+        </AiInsightBar>
+      ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <section className="space-y-3">
-          <GisSectionHeading title="Status alur" />
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <GisStatTile label="Jurusan di jadwal" value={jurusanLabel} />
-            <GisStatTile label="Belum diplot" value={`${unplotted.length} slot`} />
-            <GisStatTile
-              label="Konflik"
-              value={validated ? openKonflik.length : "—"}
-              tone="ai"
-              icon={AlertTriangle}
-            />
-          </dl>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Link href={jsHref} className={buttonVariants({ variant: "outline" })}>
-              Buka grid jadwal
-            </Link>
-            <Link href={`${jsHref}?tab=plotting`} className={buttonVariants({ variant: "outline" })}>
-              Plotting guru
-            </Link>
-            <Link href="/ai/tanya" className={buttonVariants({ variant: "outline" })}>
-              Bantuan AI
-            </Link>
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <GisStatTile label="Jurusan" value={jadwal ? angka.format(jumlahJurusan) : "—"} />
+        <GisStatTile label="Slot belum diplot" value={angka.format(unplotted.length)} />
+        <GisStatTile label="Kesalahan" value={validated ? angka.format(errorCount) : "—"} />
+        <GisStatTile label="Peringatan" value={validated ? angka.format(warningCount) : "—"} />
+      </dl>
+
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(16rem,0.7fr)]">
+        <GisPanel className="overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+            <div>
+              <h2 className="text-sm font-medium">Ringkasan bentrok</h2>
+              <p className="text-xs text-muted-foreground">
+                {validated ? `${angka.format(openKonflik.length)} terbuka` : "Belum divalidasi"}
+              </p>
+            </div>
+            {validated && openKonflik.length > 0 ? (
+              <Link href={konflikHref} className="text-xs font-medium text-primary hover:underline">
+                Daftar
+              </Link>
+            ) : null}
           </div>
-        </section>
-
-        <section className="space-y-3">
-          <GisSectionHeading title="Hasil validasi" />
           {!validated ? (
-            <GisPanel className="px-4 py-6 text-sm text-muted-foreground">
-              Bentrok tampil di AI Conflict Predictor setelah validasi dijalankan.
-            </GisPanel>
+            <p className="px-4 py-6 text-sm text-muted-foreground">Jalankan validasi untuk mengisi ringkasan ini.</p>
+          ) : ringkasan.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-muted-foreground">Tidak ada konflik terbuka.</p>
           ) : (
-            <GisPanel className="p-3">
-              <ConflictList
-                items={conflictItems}
-                onSelect={(id) => {
-                  setSelectedConflictId(id);
-                  router.push(`${konflikHref}?pilih=${id}`);
-                }}
-              />
-            </GisPanel>
+            <ul>
+              {ringkasan.map((row) => (
+                <li key={row.type} className="border-b border-border last:border-b-0">
+                  <Link
+                    href={konflikHref}
+                    className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/50"
+                  >
+                    <span>{conflictTypeLabel(row.type)}</span>
+                    <span className="font-medium tabular-nums">{angka.format(row.jumlah)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
-        </section>
+        </GisPanel>
+
+        <div className="space-y-3">
+          <GisPanel className="p-4">
+            <h2 className="text-sm font-medium">Alur</h2>
+            <ol className="mt-3 space-y-2">
+              {steps.map((step) => (
+                <li key={step.id}>
+                  <Link href={step.href} className="flex items-center gap-2 text-sm">
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                        step.status === "done" && "border-transparent bg-secondary text-foreground",
+                        step.status === "current" && "border-primary bg-primary text-primary-foreground",
+                        step.status === "todo" && "border-border text-transparent",
+                      )}
+                    >
+                      <Check className="size-2.5" aria-hidden />
+                    </span>
+                    <span className={step.status === "todo" ? "text-muted-foreground" : "text-foreground"}>
+                      {step.label}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </GisPanel>
+
+          <GisPanel className="overflow-hidden">
+            <h2 className="border-b border-border px-4 py-3 text-sm font-medium">Pintasan</h2>
+            <ul>
+              {pintasan.map((item) => (
+                <li key={item.href} className="border-b border-border last:border-b-0">
+                  <Link
+                    href={item.href}
+                    className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/50"
+                  >
+                    {item.label}
+                    <ArrowRight className="size-4 text-muted-foreground" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </GisPanel>
+        </div>
       </div>
     </div>
   );
