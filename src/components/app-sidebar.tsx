@@ -533,7 +533,7 @@ export function AppSidebar() {
       <CloseMobileOnNavigate />
       <SidebarHeader className="gap-3 p-2 pt-3">
         <Link
-          href="/"
+          href="/beranda"
           className="flex w-full items-center gap-2 rounded-md p-2 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         >
           <span className="flex aspect-square size-8 shrink-0 items-center justify-center">
