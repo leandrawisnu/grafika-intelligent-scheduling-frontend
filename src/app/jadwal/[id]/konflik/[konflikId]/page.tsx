@@ -24,7 +24,7 @@ export default function TinjauSolusiPage() {
   const jadwalId = params.id as string;
   const konflikId = params.konflikId as string;
   const router = useRouter();
-  const { loadJadwal, konflik, loading: jadwalLoading } = useJadwal();
+  const { loadJadwal, loadSlotsFor, konflik, loading: jadwalLoading } = useJadwal();
   const item = konflik.find((k) => k.id === konflikId) ?? null;
 
   const [usulan, setUsulan] = useState<Usulan[]>([]);
@@ -70,6 +70,7 @@ export default function TinjauSolusiPage() {
     try {
       await api.terimaResolusi(aktif.id);
       await loadJadwal(jadwalId, { paksa: true });
+      await loadSlotsFor(jadwalId);
       router.push(`/jadwal/${jadwalId}/konflik`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal menerapkan usulan");

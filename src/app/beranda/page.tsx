@@ -24,7 +24,7 @@ export default function Dashboard() {
     openKonflik,
     errorCount,
     warningCount,
-    unplotted,
+    jumlahBelumDiplot,
     runValidasi,
     jadwal,
   } = useJadwal();
@@ -105,7 +105,7 @@ export default function Dashboard() {
 
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <GisStatTile label="Jurusan" value={jadwal ? angka.format(jumlahJurusan) : "—"} />
-        <GisStatTile label="Slot belum diplot" value={angka.format(unplotted.length)} />
+        <GisStatTile label="Slot belum diplot" value={angka.format(jumlahBelumDiplot)} />
         <GisStatTile label="Kesalahan" value={validated ? angka.format(errorCount) : "—"} />
         <GisStatTile label="Peringatan" value={validated ? angka.format(warningCount) : "—"} />
       </dl>

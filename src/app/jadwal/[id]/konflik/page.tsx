@@ -47,6 +47,7 @@ function DaftarKonflikInner() {
   const catalog = useCatalog();
   const {
     loadJadwal,
+    loadSlotsFor,
     openKonflik,
     slots,
     validated,
@@ -61,8 +62,12 @@ function DaftarKonflikInner() {
   const [tipeTab, setTipeTab] = useState<string | null>(null);
 
   useEffect(() => {
-    if (jadwalId) void loadJadwal(jadwalId);
-  }, [jadwalId, loadJadwal]);
+    if (!jadwalId) return;
+    void (async () => {
+      await loadJadwal(jadwalId);
+      await loadSlotsFor(jadwalId);
+    })();
+  }, [jadwalId, loadJadwal, loadSlotsFor]);
 
   const kelasInJadwal = useMemo(() => {
     const rows = jadwalKelasAktif.length > 0

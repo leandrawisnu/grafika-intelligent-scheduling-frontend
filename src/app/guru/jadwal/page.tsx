@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { ScheduleGrid } from "@/components/schedule-grid";
@@ -27,12 +27,21 @@ export default function GuruJadwalPage() {
     jadwalList,
     semesterLabel,
     loadJadwal,
+    loadSlotsFor,
     openKonflik,
     validated,
   } = useJadwal();
   const { setRole } = usePrototype();
 
   const [selectedGuruId, setSelectedGuruId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activeJadwalId) return;
+    void (async () => {
+      await loadJadwal(activeJadwalId);
+      await loadSlotsFor(activeJadwalId);
+    })();
+  }, [activeJadwalId, loadJadwal, loadSlotsFor]);
 
   const displaySlots = slots;
   const activeGuru = catalog.guru.filter((g) => g.aktif);

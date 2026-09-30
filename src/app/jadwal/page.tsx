@@ -30,7 +30,7 @@ export default function JadwalPage() {
     activeJadwalId,
     validated,
     openKonflik,
-    unplotted,
+    jumlahBelumDiplot,
     loading,
   } = useJadwal();
   const [semester, setSemester] = useState<Semester[]>([]);
@@ -148,7 +148,7 @@ export default function JadwalPage() {
           {jadwalList.map((j) => {
             const isActive = j.id === activeJadwalId;
             const konflikCount = isActive ? openKonflik.length : 0;
-            const unplot = isActive ? unplotted.length : 0;
+            const unplot = isActive ? jumlahBelumDiplot : 0;
             const val = isActive ? validated : false;
             return (
               <li key={j.id}>

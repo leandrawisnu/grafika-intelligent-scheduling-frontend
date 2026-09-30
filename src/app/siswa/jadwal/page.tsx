@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export default function SiswaJadwalPage() {
   const router = useRouter();
   const catalog = useCatalog();
-  const { slots, activeJadwalId, jadwal } = useJadwal();
+  const { slots, activeJadwalId, jadwal, loadJadwal, loadSlotsFor } = useJadwal();
   const { viewKelasId, setViewKelasId, setRole } = usePrototype();
   const kelasSemester = useMemo(
     () =>
@@ -20,6 +20,14 @@ export default function SiswaJadwalPage() {
       ),
     [catalog.kelas, jadwal?.semester_id],
   );
+
+  useEffect(() => {
+    if (!activeJadwalId) return;
+    void (async () => {
+      await loadJadwal(activeJadwalId);
+      await loadSlotsFor(activeJadwalId);
+    })();
+  }, [activeJadwalId, loadJadwal, loadSlotsFor]);
 
   useEffect(() => {
     if (!kelasSemester.some((item) => item.id === viewKelasId)) {

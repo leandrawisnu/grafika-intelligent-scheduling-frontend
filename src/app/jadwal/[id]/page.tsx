@@ -26,6 +26,7 @@ function JadwalDetailInner() {
   const catalog = useCatalog();
   const {
     loadJadwal,
+    loadSlotsFor,
     jadwal,
     slots,
     jadwalKelasAktif,
@@ -37,8 +38,12 @@ function JadwalDetailInner() {
   } = useJadwal();
 
   useEffect(() => {
-    if (jadwalId) void loadJadwal(jadwalId);
-  }, [jadwalId, loadJadwal]);
+    if (!jadwalId) return;
+    void (async () => {
+      await loadJadwal(jadwalId);
+      await loadSlotsFor(jadwalId);
+    })();
+  }, [jadwalId, loadJadwal, loadSlotsFor]);
 
   useEffect(() => {
     if (searchParams.get("tab") === "konflik" && jadwalId) {

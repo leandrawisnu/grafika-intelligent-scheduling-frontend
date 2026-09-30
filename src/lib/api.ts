@@ -152,6 +152,10 @@ export const api = {
     requestList<JadwalKelas>(
       `/jadwal-semester/${jsId}/jadwal-kelas-aktif${opsi?.ringkas ? "?ringkas=1" : ""}`,
     ),
+  getRingkasanJadwal: (jsId: string) =>
+    request<{ jumlah_slot: number; jumlah_tanpa_guru: number }>(
+      `/jadwal-semester/${jsId}/ringkasan`,
+    ),
 
   pratinjauImpor: (jsId: string, berkas: File) => {
     const body = new FormData();
