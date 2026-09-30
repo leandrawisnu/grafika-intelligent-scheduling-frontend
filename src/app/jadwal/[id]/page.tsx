@@ -27,6 +27,7 @@ function JadwalDetailInner() {
   const {
     loadJadwal,
     loadSlotsFor,
+    error,
     jadwal,
     slots,
     jadwalKelasAktif,
@@ -126,7 +127,13 @@ function JadwalDetailInner() {
               </Button>
             </AiInsightBar>
           ) : null}
-          {slots.length === 0 ? (
+          {error ? (
+            <AiInsightBar title="Slot jadwal gagal dimuat" detail={error}>
+              <Button size="sm" variant="outline" onClick={() => void loadSlotsFor(jadwalId)}>
+                Muat ulang
+              </Button>
+            </AiInsightBar>
+          ) : slots.length === 0 ? (
             <AiInsightBar
               title="Jadwal ini belum berisi slot"
               detail={

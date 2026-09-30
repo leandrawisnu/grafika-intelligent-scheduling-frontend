@@ -7,6 +7,7 @@ import { Sparkles } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScheduleGrid } from "@/components/schedule-grid";
+import { AiInsightBar } from "@/components/ai-insight-bar";
 import { GisPanel } from "@/components/gis-surface";
 import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
@@ -48,6 +49,7 @@ function DaftarKonflikInner() {
   const {
     loadJadwal,
     loadSlotsFor,
+    error,
     openKonflik,
     slots,
     validated,
@@ -138,6 +140,14 @@ function DaftarKonflikInner() {
           </Button>
         </div>
       </div>
+
+      {error ? (
+        <AiInsightBar title="Slot jadwal gagal dimuat" detail={error}>
+          <Button size="sm" variant="outline" onClick={() => void loadSlotsFor(jadwalId)}>
+            Muat ulang
+          </Button>
+        </AiInsightBar>
+      ) : null}
 
       {!validated ? (
         <GisPanel className="px-4 py-6 text-sm text-muted-foreground">

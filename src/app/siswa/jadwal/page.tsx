@@ -3,6 +3,8 @@
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ScheduleGrid } from "@/components/schedule-grid";
+import { AiInsightBar } from "@/components/ai-insight-bar";
+import { Button } from "@/components/ui/button";
 import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
 import { usePrototype } from "@/lib/prototype-store";
@@ -11,7 +13,7 @@ import { cn } from "@/lib/utils";
 export default function SiswaJadwalPage() {
   const router = useRouter();
   const catalog = useCatalog();
-  const { slots, activeJadwalId, jadwal, loadJadwal, loadSlotsFor } = useJadwal();
+  const { slots, activeJadwalId, jadwal, loadJadwal, loadSlotsFor, error } = useJadwal();
   const { viewKelasId, setViewKelasId, setRole } = usePrototype();
   const kelasSemester = useMemo(
     () =>
@@ -50,6 +52,13 @@ export default function SiswaJadwalPage() {
         <p className="text-sm text-muted-foreground">Belum ada jadwal semester.</p>
       ) : (
         <>
+          {error ? (
+            <AiInsightBar title="Slot jadwal gagal dimuat" detail={error}>
+              <Button size="sm" variant="outline" onClick={() => void loadSlotsFor(activeJadwalId)}>
+                Muat ulang
+              </Button>
+            </AiInsightBar>
+          ) : null}
           <div className="flex flex-wrap gap-1.5">
             {kelasSemester.map((item) => (
               <button

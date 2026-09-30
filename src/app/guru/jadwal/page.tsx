@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { ScheduleGrid } from "@/components/schedule-grid";
+import { AiInsightBar } from "@/components/ai-insight-bar";
 import { GisPanel, GisStatTile } from "@/components/gis-surface";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ export default function GuruJadwalPage() {
     semesterLabel,
     loadJadwal,
     loadSlotsFor,
+    error,
     openKonflik,
     validated,
   } = useJadwal();
@@ -104,6 +106,13 @@ export default function GuruJadwalPage() {
         <p className="text-sm text-muted-foreground">Belum ada jadwal semester.</p>
       ) : (
         <>
+          {error ? (
+            <AiInsightBar title="Slot jadwal gagal dimuat" detail={error}>
+              <Button size="sm" variant="outline" onClick={() => void loadSlotsFor(activeJadwalId)}>
+                Muat ulang
+              </Button>
+            </AiInsightBar>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <GisStatTile
               label="Total sesi"
