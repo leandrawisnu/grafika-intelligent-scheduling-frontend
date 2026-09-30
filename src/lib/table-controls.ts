@@ -16,7 +16,7 @@ export type TableFilterConfig = {
 type FieldLike = {
   key: string;
   label: string;
-  type?: "text" | "number" | "select" | "date";
+  type?: "text" | "number" | "select" | "date" | "time";
   /** Tampilkan dropdown filter di toolbar tabel (default: true untuk select). */
   tableFilter?: boolean;
   options?: { value: string; label: string }[];

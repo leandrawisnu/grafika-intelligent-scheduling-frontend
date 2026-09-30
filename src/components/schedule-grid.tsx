@@ -226,7 +226,7 @@ export function ScheduleGrid({
       )}
     >
       {grid}
-      <div className="flex flex-col gap-2 border-t border-border px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="border-t border-border px-4 py-2.5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           {legend.map((tone) => (
             <span key={tone.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -235,7 +235,6 @@ export function ScheduleGrid({
             </span>
           ))}
         </div>
-        <p className="text-[11px] text-muted-foreground">Geser untuk melihat jadwal lengkap →</p>
       </div>
     </div>
   );

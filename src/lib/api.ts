@@ -38,6 +38,7 @@ async function requestList<T>(path: string, options?: RequestInit): Promise<T[]>
 
 export type TableQuery = {
   page: number;
+  per_page: number;
   q: string;
   sort: string;
   filters: Record<string, string>;
@@ -53,6 +54,7 @@ export type TablePage<T> = {
 function masterPagePath(path: string, query: TableQuery): string {
   const params = new URLSearchParams();
   params.set("page", String(Math.max(1, query.page)));
+  if (query.per_page > 0) params.set("per_page", String(query.per_page));
   const q = query.q.trim();
   if (q) params.set("q", q);
   if (query.sort && query.sort !== "default") params.set("sort", query.sort);
