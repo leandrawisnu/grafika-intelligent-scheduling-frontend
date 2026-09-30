@@ -28,6 +28,14 @@ import { LandingHero } from "@/components/landing/hero";
 import SimpleMarquee from "@/components/fancy/blocks/simple-marquee";
 import Typewriter from "@/components/fancy/text/typewriter";
 
+const partnerLogos = [
+  { src: "/Icons/1.%20LOGO%20JHIC%202.0.png", alt: "Jagoan Hosting Innovation Competition 2026" },
+  { src: "/Icons/2.%20Logo%20Jagoan%20Hosting.png", alt: "Jagoan Hosting" },
+  { src: "/Icons/3.%20KOMDIGI.png", alt: "Komdigi" },
+  { src: "/Icons/4.%20Garuda%20Spark%20Full%20Color.png", alt: "Garuda Spark Innovation Hub" },
+  { src: "/Icons/5.%20LOGO%20NGALUP.png", alt: "Ngalup.co" },
+] as const;
+
 export const metadata: Metadata = {
   title: "GIS — Grafika Intelligent Scheduling",
   description:
@@ -289,7 +297,7 @@ export default function LandingPage() {
   return (
     <div className="h-full scroll-smooth overflow-y-auto bg-background text-foreground">
       <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
-        <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
+        <div className="relative mx-auto flex h-16 w-full max-w-[var(--page-max-width)] items-center gap-3 px-6 md:px-8">
           <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <Logo />
             <span className="min-w-0 leading-tight">
@@ -325,7 +333,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+      <main className="mx-auto w-full max-w-[var(--page-max-width)] px-6 md:px-8">
         <LandingHero>
           <IlustrasiGrid />
           <KartuResolusi />
@@ -541,7 +549,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-border">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 text-sm sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] sm:px-6">
+        <div className="mx-auto grid w-full max-w-[var(--page-max-width)] gap-8 px-6 py-10 text-sm sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] md:px-8">
           <div>
             <p className="flex items-center gap-2">
               <Logo className="size-6" />
@@ -571,9 +579,18 @@ export default function LandingPage() {
           </nav>
         </div>
         <div className="border-t border-border">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="mx-auto flex w-full max-w-[var(--page-max-width)] flex-col gap-3 px-6 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between md:px-8">
             <p>© 2026 Grafika Intelligent Scheduling</p>
-            <p>Dibangun untuk JHIC 2026 — Web Development</p>
+            <div className="flex items-center gap-4 overflow-x-auto">
+              {partnerLogos.map((logo) => (
+                <img
+                  key={logo.src}
+                  src={logo.src}
+                  alt={logo.alt}
+                  className="h-6 w-auto shrink-0 object-contain"
+                />
+              ))}
+            </div>
           </div>
         </div>
       </footer>
