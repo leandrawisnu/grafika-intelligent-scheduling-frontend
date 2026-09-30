@@ -121,12 +121,17 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadSlotsFor = useCallback(async (jsId: string) => {
-    const kelasAktif = await api.getJadwalKelasAktif(jsId);
-    if (activeJadwalIdRef.current !== jsId) return;
-    const list = Array.isArray(kelasAktif) ? kelasAktif : [];
-    setJadwalKelasAktif(list);
-    setSlots(flattenSlots(list));
-    setSlotsLoadedForId(jsId);
+    setError(null);
+    try {
+      const kelasAktif = await api.getJadwalKelasAktif(jsId);
+      if (activeJadwalIdRef.current !== jsId) return;
+      const list = Array.isArray(kelasAktif) ? kelasAktif : [];
+      setJadwalKelasAktif(list);
+      setSlots(flattenSlots(list));
+      setSlotsLoadedForId(jsId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal memuat slot jadwal");
+    }
   }, []);
 
   const loadKonflikFor = useCallback(async (jsId: string) => {
