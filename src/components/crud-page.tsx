@@ -311,10 +311,10 @@ export function CRUDPage({
         await onCreate(payload);
       }
       setDialogOpen(false);
-      await load();
+      setSaving(false);
+      void load();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Gagal menyimpan");
-    } finally {
       setSaving(false);
     }
   };
@@ -322,7 +322,7 @@ export function CRUDPage({
   const handleDelete = async (row: any) => {
     if (confirm(`Hapus data ini?`)) {
       await onDelete(row.id);
-      await load();
+      void load();
     }
   };
 

@@ -6,9 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import type {
   Guru,
@@ -41,7 +43,13 @@ type CatalogState = {
 
 const CatalogContext = createContext<CatalogState | null>(null);
 
+function halamanMaster(pathname: string) {
+  return pathname === "/master" || pathname.startsWith("/master/");
+}
+
 export function CatalogProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const sudahMinta = useRef(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hari, setHari] = useState<Hari[]>([]);
@@ -71,8 +79,14 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (halamanMaster(pathname)) {
+      setLoading(false);
+      return;
+    }
+    if (sudahMinta.current) return;
+    sudahMinta.current = true;
     void refresh();
-  }, [refresh]);
+  }, [pathname, refresh]);
 
   const maps = useMemo(() => {
     const guruById = new Map(guru.map((g) => [g.id, g]));

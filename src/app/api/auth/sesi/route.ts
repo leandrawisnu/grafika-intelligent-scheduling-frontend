@@ -3,6 +3,7 @@ import {
   apiOrigin,
   secureFromForwarded,
   sessionCookieName,
+  sessionCookieOptions,
 } from "@/lib/session-cookie";
 
 export async function GET(req: NextRequest) {
@@ -22,8 +23,15 @@ export async function GET(req: NextRequest) {
     cache: "no-store",
   });
   const data = await go.json().catch(() => ({ error: "Sesi tidak berlaku." }));
-  return NextResponse.json(data, {
+  const res = NextResponse.json(data, {
     status: go.status,
     headers: { "Cache-Control": "no-store" },
   });
+  if (go.status === 401) {
+    res.cookies.set(sessionCookieName(secure), "", {
+      ...sessionCookieOptions(secure),
+      maxAge: 0,
+    });
+  }
+  return res;
 }

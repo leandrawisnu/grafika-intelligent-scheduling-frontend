@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { konflikToListItem, type ConflictListItem } from "@/lib/conflict-display";
 import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
@@ -18,6 +19,15 @@ import type { JadwalKelas, JadwalSemester, Konflik, SlotJadwal } from "@/lib/typ
 import type { WorkflowStep } from "@/lib/prototype-types";
 
 const STORAGE_KEY = "gis.activeJadwalSemesterId";
+
+function ruteButuhDetailJadwal(pathname: string) {
+  return (
+    pathname === "/beranda" ||
+    pathname.startsWith("/jadwal") ||
+    pathname.startsWith("/guru") ||
+    pathname.startsWith("/siswa")
+  );
+}
 
 function slotsOfJk(jk: JadwalKelas): SlotJadwal[] {
   return jk.slot_jadwal ?? (jk as JadwalKelas & { SlotJadwal?: SlotJadwal[] }).SlotJadwal ?? [];
@@ -83,6 +93,9 @@ type JadwalStore = {
 const JadwalContext = createContext<JadwalStore | null>(null);
 
 export function JadwalProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [jadwalList, setJadwalList] = useState<JadwalSemester[]>([]);
@@ -101,6 +114,8 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const loadedIdRef = useRef<string | null>(null);
   const activeJadwalIdRef = useRef<string | null>(null);
+  const jadwalListRef = useRef(jadwalList);
+  jadwalListRef.current = jadwalList;
   const muatBerjalan = useRef(new Map<string, Promise<void>>());
 
   const setActiveJadwalId = useCallback((id: string) => {
@@ -108,6 +123,11 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       setSlots([]);
       setSlotsLoadedForId(null);
       setJumlahTanpaGuru(0);
+      setKonflik([]);
+      setValidated(false);
+      loadedIdRef.current = null;
+      const ringkas = jadwalListRef.current.find((item) => item.id === id);
+      if (ringkas) setJadwal((prev) => (prev?.id === id ? prev : ringkas));
     }
     activeJadwalIdRef.current = id;
     setActiveJadwalIdState(id);
@@ -196,11 +216,26 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       const stored =
         typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       const pick = pickJadwalId(list, stored);
-      if (pick) await loadJadwal(pick);
-      else setLoading(false);
+      if (!pick) {
+        setLoading(false);
+        return;
+      }
+      setActiveJadwalId(pick);
+      const ringkas = list.find((item) => item.id === pick) ?? null;
+      setJadwal((prev) => prev ?? ringkas);
+      if (ruteButuhDetailJadwal(pathnameRef.current)) {
+        await loadJadwal(pick);
+        return;
+      }
+      setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- bootstrap once
   }, []);
+
+  useEffect(() => {
+    if (!activeJadwalId || !ruteButuhDetailJadwal(pathname)) return;
+    void loadJadwal(activeJadwalId);
+  }, [pathname, activeJadwalId, loadJadwal]);
 
   const semesterLabel = useMemo(() => jadwalSemesterLabel(jadwal), [jadwal]);
 

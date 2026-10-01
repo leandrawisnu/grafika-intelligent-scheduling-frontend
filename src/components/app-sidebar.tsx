@@ -137,7 +137,7 @@ const navItemClass =
   "relative h-10 gap-3 rounded-full px-3 text-sm font-medium text-muted-foreground";
 
 function SchoolContextCard({ variant }: { variant: "card" | "icon" }) {
-  const { activeJadwalId, semesterLabel, jadwalList, loadJadwal } = useJadwal();
+  const { activeJadwalId, semesterLabel, jadwalList, setActiveJadwalId } = useJadwal();
   const [open, setOpen] = useState(false);
   const canPick = jadwalList.length > 0;
   const periodLine = activeJadwalId ? semesterLabel : "Belum ada jadwal semester aktif";
@@ -198,7 +198,7 @@ function SchoolContextCard({ variant }: { variant: "card" | "icon" }) {
                       )}
                       onClick={() => {
                         setOpen(false);
-                        if (item.id !== activeJadwalId) void loadJadwal(item.id);
+                        if (item.id !== activeJadwalId) setActiveJadwalId(item.id);
                       }}
                     >
                       {label}
@@ -262,7 +262,7 @@ function SchoolContextCard({ variant }: { variant: "card" | "icon" }) {
               )}
               onClick={() => {
                 setOpen(false);
-                if (item.id !== activeJadwalId) void loadJadwal(item.id);
+                if (item.id !== activeJadwalId) setActiveJadwalId(item.id);
               }}
             >
               {label}

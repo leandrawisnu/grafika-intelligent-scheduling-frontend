@@ -37,6 +37,10 @@ export async function middleware(req: NextRequest) {
     return tanpaCache(NextResponse.next());
   }
 
+  // Go sudah menolak token mati. Preflight /auth/sesi di sini menggandakan setiap CRUD.
+  const apiDilindungiGo =
+    pathname === "/api/auth/sesi" || pathname === "/api/v1" || pathname.startsWith("/api/v1/");
+
   if (!token) {
     if (halamanMasuk) {
       const res = tanpaCache(NextResponse.next());
@@ -54,6 +58,10 @@ export async function middleware(req: NextRequest) {
       );
     }
     return halamanLogin(req, false);
+  }
+
+  if (apiDilindungiGo) {
+    return tanpaCache(NextResponse.next());
   }
 
   const cek = await fetch(`${apiOrigin()}/api/v1/auth/sesi`, {
