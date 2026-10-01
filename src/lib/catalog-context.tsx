@@ -55,37 +55,17 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const labels = ["hari", "jam", "kelas", "guru", "mapel", "ruangan", "jurusan"] as const;
-    const results = await Promise.allSettled([
-      api.getHari(),
-      api.getJamPelajaran(),
-      api.getKelas(),
-      api.getGuru(),
-      api.getMataPelajaran(),
-      api.getRuangan(),
-      api.getJurusan(),
-    ]);
-    const failed: string[] = [];
-
-    if (results[0].status === "fulfilled") {
-      setHari(results[0].value.sort((a, b) => a.urutan_hari - b.urutan_hari));
-    } else failed.push(labels[0]);
-    if (results[1].status === "fulfilled") {
-      setJam(results[1].value.sort((a, b) => a.jam_ke - b.jam_ke));
-    } else failed.push(labels[1]);
-    if (results[2].status === "fulfilled") setKelas(results[2].value);
-    else failed.push(labels[2]);
-    if (results[3].status === "fulfilled") setGuru(results[3].value);
-    else failed.push(labels[3]);
-    if (results[4].status === "fulfilled") setMataPelajaran(results[4].value);
-    else failed.push(labels[4]);
-    if (results[5].status === "fulfilled") setRuangan(results[5].value);
-    else failed.push(labels[5]);
-    if (results[6].status === "fulfilled") setJurusan(results[6].value);
-    else failed.push(labels[6]);
-
-    if (failed.length > 0) {
-      setError(`Gagal memuat katalog: ${failed.join(", ")}. Cek backend lalu muat ulang halaman.`);
+    try {
+      const katalog = await api.getKatalog();
+      setHari([...katalog.hari].sort((a, b) => a.urutan_hari - b.urutan_hari));
+      setJam([...katalog.jam_pelajaran].sort((a, b) => a.jam_ke - b.jam_ke));
+      setKelas(katalog.kelas);
+      setGuru(katalog.guru);
+      setMataPelajaran(katalog.mata_pelajaran);
+      setRuangan(katalog.ruangan);
+      setJurusan(katalog.jurusan);
+    } catch {
+      setError("Gagal memuat katalog. Cek backend lalu muat ulang halaman.");
     }
     setLoading(false);
   }, []);

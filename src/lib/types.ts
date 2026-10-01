@@ -78,6 +78,7 @@ export interface JadwalSemester {
   semester_id: string;
   status: string;
   bebas_konflik: boolean;
+  punya_kelas_aktif?: boolean;
   jurusan?: JadwalSemesterJurusan[];
   jadwal_kelas?: JadwalKelas[];
   semester?: { nama: string; tahun_ajaran_id: string };

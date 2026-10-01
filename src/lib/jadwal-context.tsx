@@ -31,19 +31,13 @@ function flattenSlots(jadwalKelas: JadwalKelas[]): SlotJadwal[] {
   return out;
 }
 
-async function jadwalHasKelasAktif(id: string): Promise<boolean> {
-  const rows = await api.getJadwalKelasAktif(id, { ringkas: true });
-  return rows.length > 0;
-}
-
-async function pickJadwalId(list: JadwalSemester[], stored: string | null): Promise<string | null> {
+function pickJadwalId(list: JadwalSemester[], stored: string | null): string | null {
   if (list.length === 0) return null;
-  if (stored && list.some((j) => j.id === stored) && await jadwalHasKelasAktif(stored)) {
+  if (stored && list.some((j) => j.id === stored && j.punya_kelas_aktif)) {
     return stored;
   }
-  for (const j of list) {
-    if (await jadwalHasKelasAktif(j.id)) return j.id;
-  }
+  const denganKelas = list.find((j) => j.punya_kelas_aktif);
+  if (denganKelas) return denganKelas.id;
   if (stored && list.some((j) => j.id === stored)) return stored;
   return list[0]?.id ?? null;
 }
@@ -201,7 +195,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       const list = await refreshList();
       const stored =
         typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-      const pick = await pickJadwalId(list, stored);
+      const pick = pickJadwalId(list, stored);
       if (pick) await loadJadwal(pick);
       else setLoading(false);
     })();

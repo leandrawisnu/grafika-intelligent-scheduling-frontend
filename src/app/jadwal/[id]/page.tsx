@@ -14,7 +14,6 @@ import { useJadwal } from "@/lib/jadwal-context";
 import { KelasGridFilter } from "@/components/kelas-grid-filter";
 import { GisPanel } from "@/components/gis-surface";
 import { nestedKelas } from "@/lib/jadwal-labels";
-import { api } from "@/lib/api";
 
 function JadwalDetailInner() {
   const params = useParams();
@@ -67,17 +66,8 @@ function JadwalDetailInner() {
       setAltJadwalId(null);
       return;
     }
-    void (async () => {
-      for (const j of jadwalList) {
-        if (j.id === jadwalId) continue;
-        const rows = await api.getJadwalKelasAktif(j.id, { ringkas: true });
-        if (Array.isArray(rows) && rows.length > 0) {
-          setAltJadwalId(j.id);
-          return;
-        }
-      }
-      setAltJadwalId(null);
-    })();
+    const lain = jadwalList.find((j) => j.id !== jadwalId && j.punya_kelas_aktif);
+    setAltJadwalId(lain?.id ?? null);
   }, [slots.length, jadwalList, jadwalId]);
 
   const kelasInJadwal = useMemo(() => {
