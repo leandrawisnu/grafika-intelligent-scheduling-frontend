@@ -138,7 +138,7 @@ function statusTeks(status: StatusImpor) {
 
 export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
   const catalog = useCatalog();
-  const { jadwal, loadJadwal } = useJadwal();
+  const { jadwal, loadJadwal, loadSlotsFor } = useJadwal();
   const [open, setOpen] = useState(false);
   const [berkas, setBerkas] = useState<File | null>(null);
   const [baris, setBaris] = useState<BarisEdit[]>([]);
@@ -258,6 +258,7 @@ export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
         })),
       );
       await loadJadwal(jadwalId, { paksa: true });
+      await loadSlotsFor(jadwalId);
       ubahBuka(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan jadwal.");

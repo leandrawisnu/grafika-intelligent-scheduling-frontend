@@ -14,7 +14,6 @@ import { useJadwal } from "@/lib/jadwal-context";
 import { KelasGridFilter } from "@/components/kelas-grid-filter";
 import { GisPanel } from "@/components/gis-surface";
 import { nestedKelas } from "@/lib/jadwal-labels";
-import { api } from "@/lib/api";
 
 function JadwalDetailInner() {
   const params = useParams();
@@ -26,6 +25,8 @@ function JadwalDetailInner() {
   const catalog = useCatalog();
   const {
     loadJadwal,
+    loadSlotsFor,
+    error,
     jadwal,
     slots,
     jadwalKelasAktif,
@@ -37,8 +38,12 @@ function JadwalDetailInner() {
   } = useJadwal();
 
   useEffect(() => {
-    if (jadwalId) void loadJadwal(jadwalId);
-  }, [jadwalId, loadJadwal]);
+    if (!jadwalId) return;
+    void (async () => {
+      await loadJadwal(jadwalId);
+      await loadSlotsFor(jadwalId);
+    })();
+  }, [jadwalId, loadJadwal, loadSlotsFor]);
 
   useEffect(() => {
     if (searchParams.get("tab") === "konflik" && jadwalId) {
@@ -61,17 +66,8 @@ function JadwalDetailInner() {
       setAltJadwalId(null);
       return;
     }
-    void (async () => {
-      for (const j of jadwalList) {
-        if (j.id === jadwalId) continue;
-        const rows = await api.getJadwalKelasAktif(j.id, { ringkas: true });
-        if (Array.isArray(rows) && rows.length > 0) {
-          setAltJadwalId(j.id);
-          return;
-        }
-      }
-      setAltJadwalId(null);
-    })();
+    const lain = jadwalList.find((j) => j.id !== jadwalId && j.punya_kelas_aktif);
+    setAltJadwalId(lain?.id ?? null);
   }, [slots.length, jadwalList, jadwalId]);
 
   const kelasInJadwal = useMemo(() => {
@@ -121,7 +117,13 @@ function JadwalDetailInner() {
               </Button>
             </AiInsightBar>
           ) : null}
-          {slots.length === 0 ? (
+          {error ? (
+            <AiInsightBar title="Slot jadwal gagal dimuat" detail={error}>
+              <Button size="sm" variant="outline" onClick={() => void loadSlotsFor(jadwalId)}>
+                Muat ulang
+              </Button>
+            </AiInsightBar>
+          ) : slots.length === 0 ? (
             <AiInsightBar
               title="Jadwal ini belum berisi slot"
               detail={

@@ -124,6 +124,16 @@ export const api = {
 
   getHari: () => requestList<Hari>("/hari"),
   getJamPelajaran: () => requestList<JamPelajaran>("/jam-pelajaran"),
+  getKatalog: () =>
+    request<{
+      hari: Hari[];
+      jam_pelajaran: JamPelajaran[];
+      kelas: Kelas[];
+      guru: Guru[];
+      mata_pelajaran: MataPelajaran[];
+      ruangan: Ruangan[];
+      jurusan: Jurusan[];
+    }>("/katalog"),
   listJamPelajaran: (query: TableQuery) => requestMasterPage<JamPelajaran>("/jam-pelajaran", query),
   createJamPelajaran: (d: Partial<JamPelajaran>) => request<JamPelajaran>("/jam-pelajaran", { method: "POST", body: JSON.stringify(d) }),
   updateJamPelajaran: (id: string, d: Partial<JamPelajaran>) => request<JamPelajaran>(`/jam-pelajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
@@ -151,6 +161,10 @@ export const api = {
   getJadwalKelasAktif: (jsId: string, opsi?: { ringkas?: boolean }) =>
     requestList<JadwalKelas>(
       `/jadwal-semester/${jsId}/jadwal-kelas-aktif${opsi?.ringkas ? "?ringkas=1" : ""}`,
+    ),
+  getRingkasanJadwal: (jsId: string) =>
+    request<{ jumlah_slot: number; jumlah_tanpa_guru: number }>(
+      `/jadwal-semester/${jsId}/ringkasan`,
     ),
 
   pratinjauImpor: (jsId: string, berkas: File) => {
