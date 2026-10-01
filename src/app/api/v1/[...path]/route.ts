@@ -3,6 +3,7 @@ import {
   apiOrigin,
   secureFromForwarded,
   sessionCookieName,
+  sessionCookieOptions,
 } from "@/lib/session-cookie";
 
 async function teruskan(req: NextRequest, path: string[]) {
@@ -31,7 +32,14 @@ async function teruskan(req: NextRequest, path: string[]) {
   const responseType = go.headers.get("content-type");
   if (responseType) out.set("content-type", responseType);
   out.set("cache-control", "no-store");
-  return new NextResponse(await go.arrayBuffer(), { status: go.status, headers: out });
+  const res = new NextResponse(await go.arrayBuffer(), { status: go.status, headers: out });
+  if (go.status === 401) {
+    res.cookies.set(sessionCookieName(secure), "", {
+      ...sessionCookieOptions(secure),
+      maxAge: 0,
+    });
+  }
+  return res;
 }
 
 type Konteks = { params: Promise<{ path: string[] }> };

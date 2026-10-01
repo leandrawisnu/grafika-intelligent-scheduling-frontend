@@ -14,8 +14,7 @@ import {
 } from "lucide-react";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GisSectionHeading } from "@/components/gis-surface";
-import { useCatalog } from "@/lib/catalog-context";
-import { api } from "@/lib/api";
+import { api, type TableQuery } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const kelengkapanItems = [
@@ -65,32 +64,43 @@ function IconWell({ children }: { children: React.ReactNode }) {
   );
 }
 
+const kueriJumlah: TableQuery = { page: 1, per_page: 10, q: "", sort: "default", filters: {} };
+
 export default function MasterHubPage() {
-  const catalog = useCatalog();
   const [tahunCount, setTahunCount] = useState<number | null>(null);
   const [semesterCount, setSemesterCount] = useState<number | null>(null);
+  const [counts, setCounts] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     void (async () => {
       try {
-        const [tahun, semester] = await Promise.all([api.getTahunAjaran(), api.getSemester()]);
-        setTahunCount(tahun.length);
-        setSemesterCount(semester.length);
+        const [tahun, semester, guru, mapel, jurusan, kelas, ruangan, jam] = await Promise.all([
+          api.listTahunAjaran(kueriJumlah),
+          api.listSemester(kueriJumlah),
+          api.listGuru(kueriJumlah),
+          api.listMataPelajaran(kueriJumlah),
+          api.listJurusan(kueriJumlah),
+          api.listKelas(kueriJumlah),
+          api.listRuangan(kueriJumlah),
+          api.listJamPelajaran(kueriJumlah),
+        ]);
+        setTahunCount(tahun.total);
+        setSemesterCount(semester.total);
+        setCounts({
+          guru: guru.total,
+          mapel: mapel.total,
+          jurusan: jurusan.total,
+          kelas: kelas.total,
+          ruangan: ruangan.total,
+          jam: jam.total,
+        });
       } catch {
         setTahunCount(null);
         setSemesterCount(null);
+        setCounts(null);
       }
     })();
   }, []);
-
-  const counts: Record<string, number> = {
-    guru: catalog.guru.length,
-    mapel: catalog.mataPelajaran.length,
-    jurusan: catalog.jurusan.length,
-    kelas: catalog.kelas.length,
-    ruangan: catalog.ruangan.length,
-    jam: catalog.jam.length,
-  };
 
   return (
     <div className="space-y-8">
@@ -156,7 +166,7 @@ export default function MasterHubPage() {
                   : key === "guru"
                     ? "guru"
                     : key;
-            const n = counts[countKey] ?? 0;
+            const n = counts?.[countKey] ?? 0;
             return (
               <Link key={item.href} href={item.href} className="block">
                 <div className={cn("gis-interactive-card h-full")}>
@@ -172,7 +182,7 @@ export default function MasterHubPage() {
                         </div>
                       </div>
                       <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs tabular-nums text-muted-foreground">
-                        {catalog.loading ? "…" : n}
+                        {counts == null ? "…" : n}
                       </span>
                     </div>
                   </CardHeader>
