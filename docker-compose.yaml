@@ -23,6 +23,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${PORT:-3000}
+      GIS_API_URL: ${GIS_API_URL:-http://host.docker.internal:8080}
       TZ: ${TZ:-Asia/Jakarta}
     ports:
       - "127.0.0.1:${PORT:-3000}:${PORT:-3000}"
