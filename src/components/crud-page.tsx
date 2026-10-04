@@ -36,6 +36,7 @@ import {
 } from "@/lib/table-controls";
 import { cn } from "@/lib/utils";
 import { DataTable } from "./data-table";
+import { AiImporDialog } from "./ai-impor-dialog";
 
 interface Field {
   key: string;
@@ -73,6 +74,8 @@ interface CRUDPageProps {
   onDelete: (id: string) => Promise<any>;
   getInitialData?: () => any;
   rowActions?: (row: any) => React.ReactNode;
+  /** Tampilkan tombol Impor Dokumen (AI) di header; dokumen master dipetakan otomatis. */
+  aiImpor?: boolean;
 }
 
 const CRUD_FORM_ID = "crud-dialog-form";
@@ -137,6 +140,7 @@ export function CRUDPage({
   onDelete,
   getInitialData,
   rowActions,
+  aiImpor = false,
 }: CRUDPageProps) {
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
@@ -355,15 +359,18 @@ export function CRUDPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="gis-page-title">{title}</h1>
           {description && <p className="text-muted-foreground">{description}</p>}
         </div>
-        <Button onClick={openAdd}>
-          <Plus className="size-4 shrink-0" aria-hidden />
-          Tambah
-        </Button>
+        <div className="flex items-center gap-2">
+          {aiImpor ? <AiImporDialog onSelesai={() => void load()} /> : null}
+          <Button onClick={openAdd}>
+            <Plus className="size-4 shrink-0" aria-hidden />
+            Tambah
+          </Button>
+        </div>
       </div>
 
       {loading ? (

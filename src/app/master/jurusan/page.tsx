@@ -38,6 +38,7 @@ export default function JurusanPage() {
       key={semesterAktifId || "semua"}
       title="Jurusan"
       description="Kelola data jurusan per semester"
+      aiImpor
       fields={[
         { key: "kode", label: "Kode Jurusan" },
         { key: "nama", label: "Nama Jurusan" },

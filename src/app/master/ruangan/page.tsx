@@ -38,6 +38,7 @@ export default function RuanganPage() {
       key={semesterAktifId || "semua"}
       title="Ruangan"
       description="Kelola data ruangan per semester"
+      aiImpor
       fields={[
         { key: "kode", label: "Kode Ruangan" },
         { key: "nama", label: "Nama Ruangan" },

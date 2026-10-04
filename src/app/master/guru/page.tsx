@@ -108,6 +108,7 @@ export default function GuruPage() {
       <CRUDPage
         title="Data Guru"
         description="Kelola data guru dan jam mengajar maksimal per minggu"
+        aiImpor
         fields={[
           { key: "nip", label: "NIP" },
           { key: "nama_lengkap", label: "Nama Lengkap" },
