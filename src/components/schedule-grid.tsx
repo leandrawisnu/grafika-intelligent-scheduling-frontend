@@ -8,7 +8,7 @@ import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ScheduleSlotCard } from "@/components/schedule-slot-card";
-import { legendTonesFromMapel, toneForMapel, type JurusanTone } from "@/lib/schedule-mapel-tone";
+import { legendTonesFromMapel, toneForMapel } from "@/lib/schedule-mapel-tone";
 import type { Konflik, SlotJadwal } from "@/lib/types";
 
 export function ScheduleGrid({
@@ -75,16 +75,6 @@ export function ScheduleGrid({
     return counts;
   }, [visible, displayHari]);
 
-  const jurusanFokus = useMemo<JurusanTone | null>(() => {
-    if (!kelasId) return null;
-    const kelas = catalog.kelas.find((k) => k.id === kelasId);
-    if (!kelas) return null;
-    const row = catalog.jurusan.find((j) => j.id === kelas.jurusan_id);
-    if (row) return { kode: row.kode, nama: row.nama };
-    const kode = kelas.nama.trim().split(/\s+/)[1];
-    return kode ? { kode, nama: kode } : null;
-  }, [kelasId, catalog.kelas, catalog.jurusan]);
-
   const legend = useMemo(() => {
     const mapelEntries = visible.map((s) => ({
       id: s.mata_pelajaran_id,
@@ -92,8 +82,8 @@ export function ScheduleGrid({
     }));
     const unique = new Map<string, { id: string; name: string }>();
     for (const e of mapelEntries) unique.set(e.id, e);
-    return legendTonesFromMapel([...unique.values()], jurusanFokus);
-  }, [visible, catalog, jurusanFokus]);
+    return legendTonesFromMapel([...unique.values()]);
+  }, [visible, catalog]);
 
   if (catalog.loading) {
     return <p className="text-sm text-muted-foreground">Memuat grid…</p>;
@@ -104,7 +94,7 @@ export function ScheduleGrid({
       <div className="rounded-[var(--radius-card)] border border-border bg-secondary/40 px-4 py-6 text-sm">
         <p className="font-medium text-foreground">Grid belum bisa ditampilkan</p>
         <p className="mt-1 text-muted-foreground">
-          Belum ada data <strong>jam pelajaran</strong>. Grid butuh baris jam dari master — bukan dari seed slot jadwal.
+          {catalog.error ?? "Belum ada data jam pelajaran untuk semester ini."}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link href="/master/jam-pelajaran" className={buttonVariants({ size: "sm" })}>
@@ -118,7 +108,6 @@ export function ScheduleGrid({
             Muat ulang katalog
           </button>
         </div>
-        {catalog.error ? <p className="mt-2 text-destructive">{catalog.error}</p> : null}
       </div>
     );
   }
@@ -185,7 +174,7 @@ export function ScheduleGrid({
                           const top = conflicts[0];
                           const unplotted = !slot.guru_id;
                           const mapelName = catalog.mapelName(slot.mata_pelajaran_id);
-                          const tone = toneForMapel(slot.mata_pelajaran_id, mapelName, jurusanFokus);
+                          const tone = toneForMapel(slot.mata_pelajaran_id, mapelName);
                           return (
                             <ScheduleSlotCard
                               key={slot.id}
@@ -229,7 +218,7 @@ export function ScheduleGrid({
       <div className="border-t border-border px-4 py-2.5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           {legend.map((tone) => (
-            <span key={tone.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span key={tone.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <span className={cn("size-2 rounded-full", tone.dot)} aria-hidden />
               {tone.label}
             </span>

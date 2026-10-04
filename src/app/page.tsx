@@ -225,7 +225,7 @@ function IlustrasiGrid() {
         </table>
       </div>
       <figcaption className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <LencanaAI>AI Conflict Predictor</LencanaAI>
+        <LencanaAI>Conflict Resolver</LencanaAI>
         Ilustrasi tampilan grid jadwal.
       </figcaption>
     </figure>
@@ -574,7 +574,7 @@ export default function LandingPage() {
             <ul className="mt-2 space-y-1.5 text-muted-foreground">
               <li><Link href="/login" className="hover:text-foreground">Masuk</Link></li>
               <li><Link href="/beranda" className="hover:text-foreground">Dashboard</Link></li>
-              <li><Link href="/ai/tanya" className="hover:text-foreground">Bantuan AI</Link></li>
+              <li><Link href="/ai/tanya" className="hover:text-foreground">Asisten AI</Link></li>
             </ul>
           </nav>
         </div>

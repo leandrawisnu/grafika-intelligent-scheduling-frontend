@@ -72,6 +72,7 @@ interface CRUDPageProps {
   onUpdate: (id: string, data: any) => Promise<any>;
   onDelete: (id: string) => Promise<any>;
   getInitialData?: () => any;
+  rowActions?: (row: any) => React.ReactNode;
 }
 
 const CRUD_FORM_ID = "crud-dialog-form";
@@ -135,6 +136,7 @@ export function CRUDPage({
   onUpdate,
   onDelete,
   getInitialData,
+  rowActions,
 }: CRUDPageProps) {
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
@@ -394,6 +396,7 @@ export function CRUDPage({
           data={data}
           onEdit={openEdit}
           onDelete={handleDelete}
+          extraActions={rowActions}
           serverPaging={{
             page,
             pageSize: perPage,

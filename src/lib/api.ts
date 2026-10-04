@@ -1,6 +1,6 @@
 import type {
   TahunAjaran, Semester, Jurusan, Guru, MataPelajaran, Kelas, Ruangan, Hari, JamPelajaran,
-  JadwalSemester, JadwalKelas, SlotJadwal, Konflik, PratinjauImpor, RingkasanJadwal,
+  JadwalSemester, JadwalKelas, SlotJadwal, Konflik, PratinjauImpor, RingkasanJadwal, Plotting, HariLiburGuru,
 } from "@/lib/types";
 
 const BASE_URL = "/api/v1";
@@ -91,7 +91,8 @@ export const api = {
     request<Semester>(`/semester/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteSemester: (id: string) => request<{ status: string }>(`/semester/${id}`, { method: "DELETE" }),
 
-  getJurusan: () => requestList<Jurusan>("/jurusan"),
+  getJurusan: (semesterId?: string) =>
+    requestList<Jurusan>(`/jurusan${semesterId ? `?semester_id=${semesterId}` : ""}`),
   listJurusan: (query: TableQuery) => requestMasterPage<Jurusan>("/jurusan", query),
   createJurusan: (d: Partial<Jurusan>) => request<Jurusan>("/jurusan", { method: "POST", body: JSON.stringify(d) }),
   updateJurusan: (id: string, d: Partial<Jurusan>) => request<Jurusan>(`/jurusan/${id}`, { method: "PUT", body: JSON.stringify(d) }),
@@ -116,7 +117,8 @@ export const api = {
   updateKelas: (id: string, d: Partial<Kelas>) => request<Kelas>(`/kelas/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteKelas: (id: string) => request<{status: string}>(`/kelas/${id}`, { method: "DELETE" }),
 
-  getRuangan: () => requestList<Ruangan>("/ruangan"),
+  getRuangan: (semesterId?: string) =>
+    requestList<Ruangan>(`/ruangan${semesterId ? `?semester_id=${semesterId}` : ""}`),
   listRuangan: (query: TableQuery) => requestMasterPage<Ruangan>("/ruangan", query),
   createRuangan: (d: Partial<Ruangan>) => request<Ruangan>("/ruangan", { method: "POST", body: JSON.stringify(d) }),
   updateRuangan: (id: string, d: Partial<Ruangan>) => request<Ruangan>(`/ruangan/${id}`, { method: "PUT", body: JSON.stringify(d) }),
@@ -124,7 +126,7 @@ export const api = {
 
   getHari: () => requestList<Hari>("/hari"),
   getJamPelajaran: () => requestList<JamPelajaran>("/jam-pelajaran"),
-  getKatalog: () =>
+  getKatalog: (semesterId?: string) =>
     request<{
       hari: Hari[];
       jam_pelajaran: JamPelajaran[];
@@ -133,14 +135,16 @@ export const api = {
       mata_pelajaran: MataPelajaran[];
       ruangan: Ruangan[];
       jurusan: Jurusan[];
-    }>("/katalog"),
+    }>(`/katalog${semesterId ? `?semester_id=${semesterId}` : ""}`),
   listJamPelajaran: (query: TableQuery) => requestMasterPage<JamPelajaran>("/jam-pelajaran", query),
+  listHari: (query: TableQuery) => requestMasterPage<Hari>("/hari", query),
   createJamPelajaran: (d: Partial<JamPelajaran>) => request<JamPelajaran>("/jam-pelajaran", { method: "POST", body: JSON.stringify(d) }),
   updateJamPelajaran: (id: string, d: Partial<JamPelajaran>) => request<JamPelajaran>(`/jam-pelajaran/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   deleteJamPelajaran: (id: string) => request<{status: string}>(`/jam-pelajaran/${id}`, { method: "DELETE" }),
 
-  getHariLiburGuru: (guruId: string) => request<any[]>(`/guru/${guruId}/hari-libur`),
-  createHariLiburGuru: (guruId: string, d: any) => request<any>(`/guru/${guruId}/hari-libur`, { method: "POST", body: JSON.stringify(d) }),
+  getHariLiburGuru: (guruId: string) => request<HariLiburGuru[]>(`/guru/${guruId}/hari-libur`),
+  createHariLiburGuru: (guruId: string, d: any) => request<HariLiburGuru>(`/guru/${guruId}/hari-libur`, { method: "POST", body: JSON.stringify(d) }),
+  deleteHariLiburGuru: (guruId: string, liburId: string) => request<{ status: string }>(`/guru/${guruId}/hari-libur/${liburId}`, { method: "DELETE" }),
 
   // === JADWAL SEMESTER ===
   createJadwalSemester: (d: { semester_id: string }) => request<JadwalSemester>("/jadwal-semester", { method: "POST", body: JSON.stringify(d) }),
@@ -199,12 +203,43 @@ export const api = {
     request<{status: string}>(`/jadwal-semester/${jsId}/tugaskan-guru/massal`, { method: "POST", body: JSON.stringify({ tugas }) }),
   getKetersediaanGuru: (jsId: string) => request<any[]>(`/jadwal-semester/${jsId}/ketersediaan-guru`),
 
+  // Plotting (rencana penugasan per jam per semester)
+  getPlotting: (semesterId: string, query?: { kelas_id?: string; hari_id?: string }) => {
+    const params = new URLSearchParams();
+    if (query?.kelas_id) params.set("kelas_id", query.kelas_id);
+    if (query?.hari_id) params.set("hari_id", query.hari_id);
+    const q = params.toString();
+    return requestList<Plotting>(`/semester/${semesterId}/plotting${q ? `?${q}` : ""}`);
+  },
+  createPlotting: (semesterId: string, d: {
+    kelas_id: string;
+    hari_id: string;
+    jam_pelajaran_id: string;
+    mata_pelajaran_id: string;
+    guru_id: string;
+    ruangan_id?: string;
+  }) => request<Plotting>(`/semester/${semesterId}/plotting`, { method: "POST", body: JSON.stringify(d) }),
+  updatePlotting: (plottingId: string, d: {
+    kelas_id: string;
+    hari_id: string;
+    jam_pelajaran_id: string;
+    mata_pelajaran_id: string;
+    guru_id: string;
+    ruangan_id?: string;
+  }) => request<Plotting>(`/plotting/${plottingId}`, { method: "PUT", body: JSON.stringify(d) }),
+  deletePlotting: (plottingId: string) =>
+    request<{ status: string }>(`/plotting/${plottingId}`, { method: "DELETE" }),
+  salinSemester: (semesterId: string, d: { tahun_ajaran_id: string; semester_ke: number; nama: string }) =>
+    request<Semester>(`/semester/${semesterId}/salin`, { method: "POST", body: JSON.stringify(d) }),
+
   // Konflik
   getKonflik: (jsId: string) => requestList<Konflik>(`/jadwal-semester/${jsId}/konflik`),
   validasiJadwal: (jsId: string) =>
     request<{jumlah_konflik: number; konflik: any[]; bersih: boolean}>(`/jadwal-semester/${jsId}/validasi`, { method: "POST" }),
   prediksiKonflik: (jsId: string) =>
     request<{konflik: any[]}>(`/jadwal-semester/${jsId}/prediksi-konflik`, { method: "POST" }),
+  demoKonflik: (jsId: string) =>
+    request<{guru_bentrok: number; ruangan_bentrok: number; guru_hari_libur: number; guru_kelebihan_jam: number}>(`/jadwal-semester/${jsId}/demo-konflik`, { method: "POST" }),
 
   // AI
   selesaikanKonflik: (konflikId: string) =>

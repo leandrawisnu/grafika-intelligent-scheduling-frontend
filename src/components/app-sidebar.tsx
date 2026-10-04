@@ -11,13 +11,12 @@ import {
   Clock,
   DoorOpen,
   GraduationCap,
+  GitMergeConflict,
   House,
   LogOut,
   MoreHorizontal,
   PanelLeft,
   Settings,
-  Sparkles,
-  HelpCircle,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -291,8 +290,6 @@ function KurikulumSidebarNav() {
   const jadwalActive =
     (pathname === "/jadwal" || pathname.startsWith("/jadwal/")) && !konflikActive;
 
-  const tanyaActive = pathname.startsWith("/ai/tanya");
-
   return (
     <>
       <SidebarGroup className="py-1">
@@ -313,15 +310,9 @@ function KurikulumSidebarNav() {
             />
             <WorkspaceNavItem
               href={konflikHref}
-              label="AI Conflict Predictor"
-              icon={Sparkles}
+              label="Conflict Resolver"
+              icon={GitMergeConflict}
               active={konflikActive}
-            />
-            <WorkspaceNavItem
-              href="/ai/tanya"
-              label="Tanya AI"
-              icon={HelpCircle}
-              active={tanyaActive}
             />
           </SidebarMenu>
         </SidebarGroupContent>
