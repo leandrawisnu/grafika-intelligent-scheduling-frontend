@@ -135,7 +135,7 @@ export function groupKonflikByType(items: Konflik[]) {
 }
 
 /** Normalisasi baris konflik dari API (ringkas atau lengkap). */
-export function normalisasiKonflik(row: Partial<Konflik> & Record<string, unknown>): Konflik {
+export function normalisasiKonflik(row: Partial<Konflik>): Konflik {
   return {
     id: String(row.id ?? ""),
     jadwal_semester_id: String(row.jadwal_semester_id ?? ""),
