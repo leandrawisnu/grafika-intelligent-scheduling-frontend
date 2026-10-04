@@ -59,7 +59,7 @@ export const QUERY_BANK: QueryAnswer[] = [
     id: "semua-konflik",
     keywords: ["seluruh konflik", "semua konflik", "konflik minggu"],
     answer:
-      "AI Conflict Predictor menemukan 4 potensi konflik pada Ganjil 2026/2027. Dua berstatus kesalahan (wajib diselesaikan), satu kesalahan beban jam, satu peringatan hari piket.",
+      "Conflict Resolver menemukan 4 potensi konflik pada Ganjil 2026/2027. Dua berstatus kesalahan (wajib diselesaikan), satu kesalahan beban jam, satu peringatan hari piket.",
     table: {
       columns: ["Jenis", "Pihak", "Waktu", "Risiko", "Keyakinan"],
       rows: [

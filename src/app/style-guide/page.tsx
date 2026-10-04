@@ -209,7 +209,7 @@ export default function StyleGuidePage() {
           </div>
           <div>
             <p className="text-[11px] text-muted-foreground">Title · 18px · Semibold</p>
-            <p className="text-lg font-semibold">AI Conflict Predictor</p>
+            <p className="text-lg font-semibold">Conflict Resolver</p>
           </div>
           <div>
             <p className="text-[11px] text-muted-foreground">Label · 14px · Medium</p>

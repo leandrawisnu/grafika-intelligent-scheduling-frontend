@@ -11,13 +11,13 @@ import {
   Clock,
   DoorOpen,
   GraduationCap,
+  GitMergeConflict,
   House,
   LogOut,
   MoreHorizontal,
   PanelLeft,
   Settings,
   Sparkles,
-  HelpCircle,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -313,14 +313,14 @@ function KurikulumSidebarNav() {
             />
             <WorkspaceNavItem
               href={konflikHref}
-              label="AI Conflict Predictor"
-              icon={Sparkles}
+              label="Conflict Resolver"
+              icon={GitMergeConflict}
               active={konflikActive}
             />
             <WorkspaceNavItem
               href="/ai/tanya"
-              label="Tanya AI"
-              icon={HelpCircle}
+              label="Asisten AI"
+              icon={Sparkles}
               active={tanyaActive}
             />
           </SidebarMenu>

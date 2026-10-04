@@ -32,7 +32,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   semester: "Semester",
   konflik: "Konflik",
   selesaikan: "Perbaiki konflik",
-  tanya: "Bantuan AI",
+  tanya: "Asisten AI",
 };
 
 function labelForSegment(segment: string) {
