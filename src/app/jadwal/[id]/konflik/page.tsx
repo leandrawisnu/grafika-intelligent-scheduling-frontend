@@ -48,7 +48,9 @@ function DaftarKonflikInner() {
   const catalog = useCatalog();
   const {
     loadJadwal,
+    loadKonflikFor,
     loadSlotsFor,
+    konflikDimuat,
     error,
     openKonflik,
     slots,
@@ -68,8 +70,9 @@ function DaftarKonflikInner() {
     void (async () => {
       await loadJadwal(jadwalId);
       await loadSlotsFor(jadwalId);
+      if (!konflikDimuat) await loadKonflikFor(jadwalId);
     })();
-  }, [jadwalId, loadJadwal, loadSlotsFor]);
+  }, [jadwalId, loadJadwal, loadSlotsFor, loadKonflikFor, konflikDimuat]);
 
   const kelasInJadwal = useMemo(() => {
     const rows = jadwalKelasAktif.length > 0

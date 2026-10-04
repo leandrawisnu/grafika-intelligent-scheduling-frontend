@@ -73,11 +73,26 @@ export interface JamPelajaran {
 
 // === JADWAL BARU ===
 
+export interface KonflikPerTipe {
+  tipe_konflik: string;
+  jumlah: number;
+}
+
+export interface RingkasanJadwal {
+  jumlah_slot: number;
+  jumlah_tanpa_guru: number;
+  jumlah_konflik_terbuka: number;
+  jumlah_kesalahan: number;
+  jumlah_peringatan: number;
+  konflik_per_tipe: KonflikPerTipe[];
+}
+
 export interface JadwalSemester {
   id: string;
   semester_id: string;
   status: string;
   bebas_konflik: boolean;
+  perlu_validasi?: boolean;
   punya_kelas_aktif?: boolean;
   jurusan?: JadwalSemesterJurusan[];
   jadwal_kelas?: JadwalKelas[];

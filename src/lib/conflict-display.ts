@@ -134,6 +134,22 @@ export function groupKonflikByType(items: Konflik[]) {
   return order.map((type) => ({ type, items: grouped.get(type) ?? [] }));
 }
 
+/** Normalisasi baris konflik dari API (ringkas atau lengkap). */
+export function normalisasiKonflik(row: Partial<Konflik> & Record<string, unknown>): Konflik {
+  return {
+    id: String(row.id ?? ""),
+    jadwal_semester_id: String(row.jadwal_semester_id ?? ""),
+    tipe_konflik: String(row.tipe_konflik ?? ""),
+    tingkat_keparahan: String(row.tingkat_keparahan ?? ""),
+    deskripsi: String(row.deskripsi ?? ""),
+    terselesaikan: Boolean(row.terselesaikan),
+    terdeteksi_pada: String(row.terdeteksi_pada ?? ""),
+    slot_a_id: (row.slot_a_id as string | null | undefined) ?? null,
+    slot_b_id: (row.slot_b_id as string | null | undefined) ?? null,
+    guru_id: (row.guru_id as string | null | undefined) ?? null,
+  };
+}
+
 export function konflikToListItem(k: Konflik): ConflictListItem {
   const slotIds = [k.slot_a_id, k.slot_b_id].filter(Boolean) as string[];
   return {

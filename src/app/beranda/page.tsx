@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AiInsightBar } from "@/components/ai-insight-bar";
-import { conflictTypeLabel, groupKonflikByType } from "@/lib/conflict-display";
+import { conflictTypeLabel } from "@/lib/conflict-display";
 import { useJadwal } from "@/lib/jadwal-context";
 import { usePrototype } from "@/lib/prototype-store";
 import { jadwalKonflikHref } from "@/lib/navigation";
@@ -21,7 +21,8 @@ export default function Dashboard() {
     steps,
     validated,
     validating,
-    openKonflik,
+    jumlahKonflikTerbuka,
+    konflikPerTipe,
     errorCount,
     warningCount,
     jumlahBelumDiplot,
@@ -59,9 +60,10 @@ export default function Dashboard() {
   const jsHref = activeJadwalId ? `/jadwal/${activeJadwalId}` : "/jadwal";
   const konflikHref = jadwalKonflikHref(activeJadwalId);
   const currentStep = steps.find((s) => s.status === "current");
-  const ringkasan = groupKonflikByType(openKonflik)
-    .map((group) => ({ type: group.type, jumlah: group.items.length }))
-    .sort((a, b) => b.jumlah - a.jumlah);
+  const ringkasan = konflikPerTipe.map((row) => ({
+    type: row.tipe_konflik,
+    jumlah: row.jumlah,
+  }));
 
   const jumlahJurusan = jadwal?.jurusan?.length ?? 0;
 
@@ -92,9 +94,9 @@ export default function Dashboard() {
             {validating ? "Memvalidasi…" : "Jalankan validasi"}
           </Button>
         </AiInsightBar>
-      ) : openKonflik.length > 0 ? (
+      ) : jumlahKonflikTerbuka > 0 ? (
         <AiInsightBar
-          title={`${angka.format(openKonflik.length)} konflik menunggu`}
+          title={`${angka.format(jumlahKonflikTerbuka)} konflik menunggu`}
           detail={`${angka.format(errorCount)} kesalahan, ${angka.format(warningCount)} peringatan.`}
         >
           <Link href={konflikHref} className={buttonVariants({ size: "sm" })}>
@@ -116,10 +118,10 @@ export default function Dashboard() {
             <div>
               <h2 className="text-sm font-medium">Ringkasan bentrok</h2>
               <p className="text-xs text-muted-foreground">
-                {validated ? `${angka.format(openKonflik.length)} terbuka` : "Belum divalidasi"}
+                {validated ? `${angka.format(jumlahKonflikTerbuka)} terbuka` : "Belum divalidasi"}
               </p>
             </div>
-            {validated && openKonflik.length > 0 ? (
+            {validated && jumlahKonflikTerbuka > 0 ? (
               <Link href={konflikHref} className="text-xs font-medium text-primary hover:underline">
                 Daftar
               </Link>
