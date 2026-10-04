@@ -12,10 +12,10 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
-import { konflikToListItem, type ConflictListItem } from "@/lib/conflict-display";
+import { konflikToListItem, normalisasiKonflik, type ConflictListItem } from "@/lib/conflict-display";
 import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
 import { jadwalKonflikHref } from "@/lib/navigation";
-import type { JadwalKelas, JadwalSemester, Konflik, SlotJadwal } from "@/lib/types";
+import type { JadwalKelas, JadwalSemester, Konflik, KonflikPerTipe, SlotJadwal } from "@/lib/types";
 import type { WorkflowStep } from "@/lib/prototype-types";
 
 const STORAGE_KEY = "gis.activeJadwalSemesterId";
@@ -28,6 +28,17 @@ function ruteButuhDetailJadwal(pathname: string) {
     pathname.startsWith("/siswa")
   );
 }
+
+function ruteButuhKonflik(pathname: string) {
+  return pathname.includes("/konflik");
+}
+
+const RINGKASAN_KONFLIK_KOSONG = {
+  terbuka: 0,
+  kesalahan: 0,
+  peringatan: 0,
+  perTipe: [] as KonflikPerTipe[],
+};
 
 function slotsOfJk(jk: JadwalKelas): SlotJadwal[] {
   return jk.slot_jadwal ?? (jk as JadwalKelas & { SlotJadwal?: SlotJadwal[] }).SlotJadwal ?? [];
@@ -62,6 +73,9 @@ type JadwalStore = {
   slots: SlotJadwal[];
   jadwalKelasAktif: JadwalKelas[];
   konflik: Konflik[];
+  konflikDimuat: boolean;
+  jumlahKonflikTerbuka: number;
+  konflikPerTipe: KonflikPerTipe[];
   conflictItems: ConflictListItem[];
   validated: boolean;
   mlPredicted: boolean;
@@ -80,6 +94,7 @@ type JadwalStore = {
   setSelectedConflictId: (id: string | null) => void;
   refreshList: () => Promise<JadwalSemester[]>;
   loadJadwal: (id: string, opsi?: { paksa?: boolean }) => Promise<void>;
+  loadKonflikFor: (id: string) => Promise<void>;
   loadSlotsFor: (id: string) => Promise<void>;
   createJadwal: (semesterId: string) => Promise<JadwalSemester>;
   runValidasi: () => Promise<void>;
@@ -106,6 +121,8 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const [jumlahTanpaGuru, setJumlahTanpaGuru] = useState(0);
   const [jadwalKelasAktif, setJadwalKelasAktif] = useState<JadwalKelas[]>([]);
   const [konflik, setKonflik] = useState<Konflik[]>([]);
+  const [konflikDimuat, setKonflikDimuat] = useState(false);
+  const [ringkasanKonflik, setRingkasanKonflik] = useState(RINGKASAN_KONFLIK_KOSONG);
   const [validated, setValidated] = useState(false);
   const [mlPredicted, setMlPredicted] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -124,6 +141,8 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       setSlotsLoadedForId(null);
       setJumlahTanpaGuru(0);
       setKonflik([]);
+      setKonflikDimuat(false);
+      setRingkasanKonflik(RINGKASAN_KONFLIK_KOSONG);
       setValidated(false);
       loadedIdRef.current = null;
       const ringkas = jadwalListRef.current.find((item) => item.id === id);
@@ -149,8 +168,16 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadKonflikFor = useCallback(async (jsId: string) => {
-    const rows = await api.getKonflik(jsId);
-    setKonflik(Array.isArray(rows) ? rows : []);
+    setError(null);
+    try {
+      const rows = await api.getKonflik(jsId);
+      if (activeJadwalIdRef.current !== jsId) return;
+      const list = Array.isArray(rows) ? rows.map((r) => normalisasiKonflik(r)) : [];
+      setKonflik(list);
+      setKonflikDimuat(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal memuat konflik");
+    }
   }, []);
 
   const loadJadwal = useCallback(
@@ -165,20 +192,25 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
         setLoading(true);
         setError(null);
         try {
-          const [detail, kelasAktif, rows, ringkasan] = await Promise.all([
+          const [detail, kelasAktif, ringkasan] = await Promise.all([
             api.getJadwalSemesterById(id),
             api.getJadwalKelasAktif(id, { ringkas: true }),
-            api.getKonflik(id),
             api.getRingkasanJadwal(id),
           ]);
           const list = Array.isArray(kelasAktif) ? kelasAktif : [];
-          const k = Array.isArray(rows) ? rows : [];
           setJadwal(detail);
           setActiveJadwalId(id);
           setJadwalKelasAktif(list);
           setJumlahTanpaGuru(ringkasan.jumlah_tanpa_guru);
-          setKonflik(k);
-          setValidated(k.length > 0 || detail.bebas_konflik);
+          setKonflik([]);
+          setKonflikDimuat(false);
+          setRingkasanKonflik({
+            terbuka: ringkasan.jumlah_konflik_terbuka ?? 0,
+            kesalahan: ringkasan.jumlah_kesalahan ?? 0,
+            peringatan: ringkasan.jumlah_peringatan ?? 0,
+            perTipe: ringkasan.konflik_per_tipe ?? [],
+          });
+          setValidated(detail.perlu_validasi === false || detail.bebas_konflik);
           loadedIdRef.current = id;
         } catch (e) {
           loadedIdRef.current = null;
@@ -237,6 +269,11 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
     void loadJadwal(activeJadwalId);
   }, [pathname, activeJadwalId, loadJadwal]);
 
+  useEffect(() => {
+    if (!activeJadwalId || !ruteButuhKonflik(pathname) || konflikDimuat) return;
+    void loadKonflikFor(activeJadwalId);
+  }, [pathname, activeJadwalId, konflikDimuat, loadKonflikFor]);
+
   const semesterLabel = useMemo(() => jadwalSemesterLabel(jadwal), [jadwal]);
 
   const openKonflik = useMemo(
@@ -253,13 +290,26 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const jumlahBelumDiplot =
     slotsLoadedForId === activeJadwalId ? unplotted.length : jumlahTanpaGuru;
 
-  const errorCount = openKonflik.filter((k) => k.tingkat_keparahan === "kesalahan").length;
-  const warningCount = openKonflik.filter((k) => k.tingkat_keparahan === "peringatan").length;
+  const jumlahKonflikTerbuka = konflikDimuat ? openKonflik.length : ringkasanKonflik.terbuka;
+  const errorCount = konflikDimuat
+    ? openKonflik.filter((k) => k.tingkat_keparahan === "kesalahan").length
+    : ringkasanKonflik.kesalahan;
+  const warningCount = konflikDimuat
+    ? openKonflik.filter((k) => k.tingkat_keparahan === "peringatan").length
+    : ringkasanKonflik.peringatan;
+  const konflikPerTipe = konflikDimuat
+    ? openKonflik.reduce<KonflikPerTipe[]>((acc, k) => {
+        const row = acc.find((x) => x.tipe_konflik === k.tipe_konflik);
+        if (row) row.jumlah += 1;
+        else acc.push({ tipe_konflik: k.tipe_konflik, jumlah: 1 });
+        return acc;
+      }, []).sort((a, b) => b.jumlah - a.jumlah)
+    : ringkasanKonflik.perTipe;
 
   const steps = useMemo<WorkflowStep[]>(() => {
     const jsId = activeJadwalId ?? "";
     const plotDone = jumlahBelumDiplot === 0;
-    const resolveDone = validated && openKonflik.length === 0;
+    const resolveDone = validated && jumlahKonflikTerbuka === 0;
     const current = !plotDone ? "plot" : !validated ? "predict" : !resolveDone ? "resolve" : "";
 
     const status = (id: string, done: boolean): WorkflowStep["status"] => {
@@ -277,7 +327,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       { id: "predict", label: "Cek konflik", href: konflikHref, status: status("predict", validated) },
       { id: "resolve", label: "Perbaiki konflik", href: konflikHref, status: status("resolve", resolveDone) },
     ];
-  }, [activeJadwalId, jumlahBelumDiplot, validated, openKonflik.length]);
+  }, [activeJadwalId, jumlahBelumDiplot, validated, jumlahKonflikTerbuka]);
 
   const runValidasi = useCallback(async () => {
     if (!activeJadwalId) return;
@@ -285,8 +335,22 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const result = await api.validasiJadwal(activeJadwalId);
-      const rows = result.konflik as Konflik[];
-      setKonflik(Array.isArray(rows) ? rows : []);
+      const rows = Array.isArray(result.konflik)
+        ? result.konflik.map((r) => normalisasiKonflik(r))
+        : [];
+      setKonflik(rows);
+      setKonflikDimuat(true);
+      setRingkasanKonflik({
+        terbuka: rows.length,
+        kesalahan: rows.filter((k) => k.tingkat_keparahan === "kesalahan").length,
+        peringatan: rows.filter((k) => k.tingkat_keparahan === "peringatan").length,
+        perTipe: rows.reduce<KonflikPerTipe[]>((acc, k) => {
+          const row = acc.find((x) => x.tipe_konflik === k.tipe_konflik);
+          if (row) row.jumlah += 1;
+          else acc.push({ tipe_konflik: k.tipe_konflik, jumlah: 1 });
+          return acc;
+        }, []),
+      });
       setValidated(true);
       setSelectedConflictId((id) => id ?? rows.find((k) => !k.terselesaikan)?.id ?? null);
       const detail = await api.getJadwalSemesterById(activeJadwalId);
@@ -366,6 +430,9 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       slots,
       jadwalKelasAktif,
       konflik,
+      konflikDimuat,
+      jumlahKonflikTerbuka,
+      konflikPerTipe,
       conflictItems,
       validated,
       mlPredicted,
@@ -384,6 +451,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       setSelectedConflictId,
       refreshList,
       loadJadwal,
+      loadKonflikFor,
       loadSlotsFor,
       createJadwal,
       runValidasi,
@@ -403,6 +471,9 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       slots,
       jadwalKelasAktif,
       konflik,
+      konflikDimuat,
+      jumlahKonflikTerbuka,
+      konflikPerTipe,
       conflictItems,
       validated,
       mlPredicted,
@@ -419,6 +490,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       setActiveJadwalId,
       refreshList,
       loadJadwal,
+      loadKonflikFor,
       loadSlotsFor,
       createJadwal,
       runValidasi,

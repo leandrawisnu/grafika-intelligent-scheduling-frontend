@@ -1,6 +1,6 @@
 import type {
   TahunAjaran, Semester, Jurusan, Guru, MataPelajaran, Kelas, Ruangan, Hari, JamPelajaran,
-  JadwalSemester, JadwalKelas, SlotJadwal, Konflik, PratinjauImpor,
+  JadwalSemester, JadwalKelas, SlotJadwal, Konflik, PratinjauImpor, RingkasanJadwal,
 } from "@/lib/types";
 
 const BASE_URL = "/api/v1";
@@ -163,9 +163,7 @@ export const api = {
       `/jadwal-semester/${jsId}/jadwal-kelas-aktif${opsi?.ringkas ? "?ringkas=1" : ""}`,
     ),
   getRingkasanJadwal: (jsId: string) =>
-    request<{ jumlah_slot: number; jumlah_tanpa_guru: number }>(
-      `/jadwal-semester/${jsId}/ringkasan`,
-    ),
+    request<RingkasanJadwal>(`/jadwal-semester/${jsId}/ringkasan`),
 
   pratinjauImpor: (jsId: string, berkas: File) => {
     const body = new FormData();

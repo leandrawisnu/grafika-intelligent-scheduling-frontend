@@ -30,7 +30,7 @@ export default function GuruJadwalPage() {
     loadJadwal,
     loadSlotsFor,
     error,
-    openKonflik,
+    jumlahKonflikTerbuka,
     validated,
   } = useJadwal();
   const { setRole } = usePrototype();
@@ -131,9 +131,9 @@ export default function GuruJadwalPage() {
             />
             <GisStatTile
               label="Perlu perhatian"
-              value={validated ? openKonflik.length : "—"}
+              value={validated ? jumlahKonflikTerbuka : "—"}
               hint={validated ? "konflik terdeteksi AI" : "validasi belum jalan"}
-              tone={validated && openKonflik.length > 0 ? "danger" : "default"}
+              tone={validated && jumlahKonflikTerbuka > 0 ? "danger" : "default"}
             />
           </div>
 
