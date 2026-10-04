@@ -200,3 +200,116 @@ export interface Konflik {
   slot_b_id?: string | null;
   guru_id?: string | null;
 }
+
+// === AI IMPORT DOKUMEN ===
+
+export interface MasterGuruPlan {
+  ref: string;
+  nama: string;
+  nip: string | null;
+  aksi: string;
+}
+
+export interface MasterMapelPlan {
+  ref: string;
+  nama: string;
+  kode: string | null;
+  jam_wajib_per_minggu: number | null;
+  tingkat: number | null;
+  aksi: string;
+}
+
+export interface MasterRuanganPlan {
+  ref: string;
+  nama: string;
+  kode: string | null;
+  tipe_ruangan: string | null;
+  kapasitas: number | null;
+  aksi: string;
+}
+
+export interface MasterKelasPlan {
+  ref: string;
+  nama: string;
+  kode: string | null;
+  tingkat: number | null;
+  jurusan_id: string | null;
+  jurusan_ref: string | null;
+  aksi: string;
+}
+
+export interface MasterJurusanPlan {
+  ref: string;
+  nama: string;
+  kode: string | null;
+  aksi: string;
+}
+
+export interface MasterUsulanPlan {
+  guru: MasterGuruPlan[];
+  mata_pelajaran: MasterMapelPlan[];
+  ruangan: MasterRuanganPlan[];
+  kelas: MasterKelasPlan[];
+  jurusan: MasterJurusanPlan[];
+}
+
+export interface BarisJadwalPlan {
+  hari: string;
+  jam: string;
+  kelas: string;
+  mata_pelajaran: string;
+  guru: string;
+  ruangan: string;
+  hari_id: string | null;
+  jam_pelajaran_id: string | null;
+  kelas_id: string | null;
+  mata_pelajaran_id: string | null;
+  guru_id: string | null;
+  ruangan_id: string | null;
+  kelas_ref: string | null;
+  mapel_ref: string | null;
+  guru_ref: string | null;
+  ruangan_ref: string | null;
+  status: string;
+  keyakinan: number;
+  catatan: string;
+}
+
+export interface ImportPlan {
+  jenis_dokumen: string;
+  ringkasan: string;
+  keyakinan: number;
+  peringatan: string[];
+  master_usulan: MasterUsulanPlan;
+  baris_jadwal: BarisJadwalPlan[];
+}
+
+export interface KonflikTerapkan {
+  jumlah: number;
+  kesalahan: number;
+  peringatan: number;
+}
+
+export interface HasilTerapkanImpor {
+  jumlah_master: number;
+  jumlah_slot: number;
+  dilewati: number;
+  konflik: KonflikTerapkan;
+  peringatan: string[];
+}
+
+export type StatusDokumenImpor = "menunggu" | "memproses" | "siap" | "diterapkan" | "gagal";
+
+export interface DokumenImporJob {
+  id: string;
+  status: StatusDokumenImpor;
+  tahap: string;
+  pesan?: string;
+  target: string;
+  nama_berkas: string;
+  jadwal_semester_id?: string | null;
+  rencana?: ImportPlan;
+  hasil_terapkan?: HasilTerapkanImpor;
+  created_at: string;
+  updated_at: string;
+}

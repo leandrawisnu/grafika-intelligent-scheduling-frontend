@@ -1,6 +1,7 @@
 import type {
   TahunAjaran, Semester, Jurusan, Guru, MataPelajaran, Kelas, Ruangan, Hari, JamPelajaran,
   JadwalSemester, JadwalKelas, SlotJadwal, Konflik, PratinjauImpor, RingkasanJadwal, Plotting, HariLiburGuru,
+  DokumenImporJob, HasilTerapkanImpor, ImportPlan,
 } from "@/lib/types";
 
 const BASE_URL = "/api/v1";
@@ -254,4 +255,24 @@ export const api = {
     request<{jawaban: string; data_hasil?: any}>(`/ai/tanya`, {
       method: "POST", body: JSON.stringify({ pertanyaan, jadwal_semester_id: jadwalSemesterId }),
     }),
+
+  // === AI IMPORT DOKUMEN (UMUM) ===
+  createDokumenImpor: (
+    berkas: File,
+    opts?: { jadwalSemesterId?: string; target?: "otomatis" | "jadwal" | "master" },
+  ) => {
+    const body = new FormData();
+    body.append("berkas", berkas);
+    body.append("target", opts?.target ?? "otomatis");
+    if (opts?.jadwalSemesterId) body.append("jadwal_semester_id", opts.jadwalSemesterId);
+    return requestForm<{ id: string }>("/dokumen-impor", body);
+  },
+  getDokumenImpor: (id: string) => request<DokumenImporJob>(`/dokumen-impor/${id}`),
+  terapkanDokumenImpor: (id: string, rencana: ImportPlan, semesterId?: string) =>
+    request<HasilTerapkanImpor>(`/dokumen-impor/${id}/terapkan`, {
+      method: "POST",
+      body: JSON.stringify({ rencana, semester_id: semesterId ?? "" }),
+    }),
+  ulangiDokumenImpor: (id: string) =>
+    request<{ id: string }>(`/dokumen-impor/${id}/ulangi`, { method: "POST" }),
 };
