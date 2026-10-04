@@ -59,6 +59,7 @@ function PartnerLogoRow() {
 
 function AppBreadcrumb() {
   const pathname = usePathname();
+  const { semesterLabel } = useJadwal();
   if (pathname === "/beranda") {
     return (
       <Breadcrumb className="min-w-0">
@@ -71,10 +72,27 @@ function AppBreadcrumb() {
     );
   }
 
+  const isUuid = (seg: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(seg);
+
   const parts = pathname.split("/").filter(Boolean);
   const crumbs = parts.map((part, index) => {
     const href = `/${parts.slice(0, index + 1).join("/")}`;
-    const label = labelForSegment(part);
+    let label = labelForSegment(part);
+    if (isUuid(part)) {
+      const prev = parts[index - 1];
+      if (prev === "jadwal") {
+        const nama = semesterLabel.trim();
+        label =
+          nama && nama !== "—" && nama !== "Belum ada jadwal aktif"
+            ? nama
+            : "Jadwal semester";
+      } else if (prev === "konflik") {
+        label = "Tinjau solusi";
+      } else {
+        label = "Detail";
+      }
+    }
     const isLast = index === parts.length - 1;
     return { href, label, isLast };
   });
