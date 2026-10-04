@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { GisPanel } from "@/components/gis-surface";
-import { api } from "@/lib/api";
+import { api, ApiHttpError } from "@/lib/api";
 import { conflictTypeLabel } from "@/lib/conflict-display";
 import { useJadwal } from "@/lib/jadwal-context";
 import { cn } from "@/lib/utils";
@@ -51,6 +51,11 @@ export default function TinjauSolusiPage() {
       })
       .catch((e: unknown) => {
         if (batal) return;
+        if (e instanceof ApiHttpError && e.status === 409) {
+          setError("Konflik ini sudah diselesaikan.");
+          setUsulan([]);
+          return;
+        }
         setError(e instanceof Error ? e.message : "Gagal mencocokkan data jadwal");
       })
       .finally(() => {
@@ -73,6 +78,10 @@ export default function TinjauSolusiPage() {
       await loadSlotsFor(jadwalId);
       router.push(`/jadwal/${jadwalId}/konflik`);
     } catch (e) {
+      if (e instanceof ApiHttpError && e.status === 409) {
+        router.push(`/jadwal/${jadwalId}/konflik`);
+        return;
+      }
       setError(e instanceof Error ? e.message : "Gagal menerapkan usulan");
       setMenerapkan(false);
     }
