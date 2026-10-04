@@ -17,9 +17,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SesiProvider>
       <PrototypeProvider>
-        <CatalogProvider>
-          <JadwalProvider>{children}</JadwalProvider>
-        </CatalogProvider>
+        <JadwalProvider>
+          <CatalogProvider>{children}</CatalogProvider>
+        </JadwalProvider>
       </PrototypeProvider>
     </SesiProvider>
   );

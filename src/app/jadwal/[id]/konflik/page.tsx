@@ -3,14 +3,14 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { AlertTriangle, Sparkles } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScheduleGrid } from "@/components/schedule-grid";
 import { AiInsightBar } from "@/components/ai-insight-bar";
 import { GisPanel } from "@/components/gis-surface";
 import { useCatalog } from "@/lib/catalog-context";
 import { useJadwal } from "@/lib/jadwal-context";
+import { api } from "@/lib/api";
 import { KelasGridFilter, awalKelasId } from "@/components/kelas-grid-filter";
 import { conflictRowSummary, conflictTypeLabel, groupKonflikByType, konflikMenyentuhKelas } from "@/lib/conflict-display";
 import { nestedKelas } from "@/lib/jadwal-labels";
@@ -19,25 +19,90 @@ import type { Konflik, SlotJadwal } from "@/lib/types";
 
 const TIPE_GURU = new Set(["guru_bentrok", "guru_hari_libur", "guru_kelebihan_jam"]);
 
-function namaBukanId(name: string | null | undefined, id: string | null | undefined) {
-  if (!name || (id && name === id)) return null;
-  return name;
+function KartuSlot({ slot, bentrok }: { slot: SlotJadwal; bentrok: boolean }) {
+  const katalog = useCatalog();
+  return (
+    <div
+      className={cn(
+        "rounded-[var(--radius-card)] border p-3",
+        bentrok ? "border-destructive/60 bg-destructive/5" : "border-border bg-card"
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-sm font-semibold">{katalog.mapelName(slot.mata_pelajaran_id)}</span>
+        {bentrok ? <AlertTriangle className="size-4 shrink-0 text-destructive" /> : null}
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {katalog.kelasName(slot.kelas_id)} · {katalog.guruName(slot.guru_id) ?? "Belum ada guru"}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {katalog.ruanganName(slot.ruangan_id) ?? "Tanpa ruangan"}
+      </p>
+    </div>
+  );
 }
 
-function pratinjau(konflik: Konflik | null, slots: SlotJadwal[]) {
-  if (!konflik) return { guruId: null as string | null, slots: undefined as SlotJadwal[] | undefined, judul: "Pratinjau jadwal" };
+function PratinjauKartu({ konflik, slots }: { konflik: Konflik; slots: SlotJadwal[] }) {
+  const katalog = useCatalog();
   const terkait = slots.filter((s) => s.id === konflik.slot_a_id || s.id === konflik.slot_b_id);
+  const terkaitIds = new Set(terkait.map((s) => s.id));
   const guruId = konflik.guru_id || terkait.find((s) => s.guru_id)?.guru_id || null;
-  if (TIPE_GURU.has(konflik.tipe_konflik) && guruId) {
-    return { guruId, slots: undefined, judul: "Pratinjau jadwal" };
+  const tampil = useMemo(() => {
+    if (TIPE_GURU.has(konflik.tipe_konflik) && guruId) {
+      const hariFokus = terkait[0]?.hari_id;
+      return hariFokus
+        ? slots.filter((s) => s.guru_id === guruId && s.hari_id === hariFokus)
+        : slots.filter((s) => s.guru_id === guruId);
+    }
+    return terkait;
+  }, [konflik, slots, guruId, terkait]);
+
+  const groups = useMemo(() => {
+    const m = new Map<string, SlotJadwal[]>();
+    for (const s of tampil) {
+      const key = `${s.hari_id}|${s.jam_pelajaran_id}`;
+      const arr = m.get(key) ?? [];
+      arr.push(s);
+      m.set(key, arr);
+    }
+    return [...m.entries()]
+      .map(([key, rows]) => {
+        const [hariId, jamId] = key.split("|");
+        const hari = katalog.hari.find((h) => h.id === hariId);
+        const jam = katalog.jam.find((j) => j.id === jamId);
+        return { hari, jam, rows };
+      })
+      .sort(
+        (a, b) =>
+          (a.hari?.urutan_hari ?? 999) - (b.hari?.urutan_hari ?? 999) ||
+          (a.jam?.jam_ke ?? 999) - (b.jam?.jam_ke ?? 999)
+      );
+  }, [tampil, katalog.hari, katalog.jam]);
+
+  if (tampil.length === 0) {
+    return (
+      <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+        Tidak ada slot yang terlibat.
+      </p>
+    );
   }
-  const kelasIds = new Set(terkait.map((s) => s.kelas_id));
-  const milikKelas = slots.filter((s) => kelasIds.has(s.kelas_id));
-  return {
-    guruId: null,
-    slots: milikKelas.length > 0 ? milikKelas : undefined,
-    judul: "Pratinjau jadwal",
-  };
+
+  return (
+    <div className="max-h-[28rem] space-y-4 overflow-y-auto px-4 py-4">
+      {groups.map(({ hari, jam, rows }) => (
+        <section key={`${hari?.id ?? ""}|${jam?.id ?? ""}`}>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {hari?.nama ?? "—"} · ke-{jam?.jam_ke ?? "?"} ({jam?.waktu_mulai ?? ""} – {jam?.waktu_selesai ?? ""})
+          </p>
+          <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
+            {rows.map((s) => (
+              <KartuSlot key={s.id} slot={s} bentrok={terkaitIds.has(s.id)} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
 }
 
 function DaftarKonflikInner() {
@@ -64,6 +129,24 @@ function DaftarKonflikInner() {
   } = useJadwal();
   const [filterKelasId, setFilterKelasId] = useState<string | null>(null);
   const [tipeTab, setTipeTab] = useState<string | null>(null);
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  const isDemo = useMemo(() => {
+    const sem = (jadwal?.semester?.nama ?? "").toLowerCase();
+    const ta = (jadwal?.semester?.tahun_ajaran?.nama ?? "").toLowerCase();
+    return sem.includes("demo") || ta.includes("demo");
+  }, [jadwal]);
+
+  const tambahDemo = async () => {
+    if (!jadwalId) return;
+    setDemoLoading(true);
+    try {
+      await api.demoKonflik(jadwalId);
+      await runValidasi();
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!jadwalId) return;
@@ -78,15 +161,16 @@ function DaftarKonflikInner() {
     const rows = jadwalKelasAktif.length > 0
       ? jadwalKelasAktif
       : (jadwal?.jadwal_kelas ?? []).filter((jk) => jk.is_active);
-    return rows
-      .map((jk) => {
-        const id = jk.kelas_id;
-        const nested = nestedKelas(jk);
-        const fromCatalog = catalog.kelas.find((k) => k.id === id)?.nama;
-        const nama = nested?.nama ?? fromCatalog;
-        return { id, nama: nama && nama !== id ? nama : "—" };
-      })
-      .sort((a, b) => a.nama.localeCompare(b.nama, "id"));
+    const unik = new Map<string, { id: string; nama: string }>();
+    for (const jk of rows) {
+      const id = jk.kelas_id;
+      if (unik.has(id)) continue;
+      const nested = nestedKelas(jk);
+      const fromCatalog = catalog.kelas.find((k) => k.id === id)?.nama;
+      const nama = nested?.nama ?? fromCatalog;
+      unik.set(id, { id, nama: nama && nama !== id ? nama : "—" });
+    }
+    return [...unik.values()].sort((a, b) => a.nama.localeCompare(b.nama, "id"));
   }, [jadwalKelasAktif, jadwal, catalog.kelas]);
 
   const kelasFilterId = filterKelasId ?? awalKelasId(kelasInJadwal);
@@ -96,6 +180,28 @@ function DaftarKonflikInner() {
     const awal = awalKelasId(kelasInJadwal);
     if (awal) setFilterKelasId(awal);
   }, [filterKelasId, kelasInJadwal]);
+
+  const slotById = useMemo(() => {
+    const m = new Map<string, SlotJadwal>();
+    for (const s of slots) m.set(s.id, s);
+    return m;
+  }, [slots]);
+
+  const urutPerKelasHariJam = (items: Konflik[]): Konflik[] => {
+    const kunci = (k: Konflik): [string, number, number] => {
+      const slot = slotById.get(k.slot_a_id ?? "") ?? slotById.get(k.slot_b_id ?? "");
+      if (!slot) return ["￿", 999, 999];
+      const kelas = catalog.kelas.find((x) => x.id === slot.kelas_id)?.nama ?? "";
+      const hari = catalog.hari.find((h) => h.id === slot.hari_id)?.urutan_hari ?? 999;
+      const jam = catalog.jam.find((j) => j.id === slot.jam_pelajaran_id)?.jam_ke ?? 999;
+      return [kelas, hari, jam];
+    };
+    return [...items].sort((a, b) => {
+      const ka = kunci(a);
+      const kb = kunci(b);
+      return ka[0].localeCompare(kb[0], "id") || ka[1] - kb[1] || ka[2] - kb[2];
+    });
+  };
 
   const visible = useMemo(
     () => openKonflik.filter((item) => konflikMenyentuhKelas(item, kelasFilterId, slots)),
@@ -107,10 +213,10 @@ function DaftarKonflikInner() {
     : groups.find((group) => group.items.some((item) => item.id === searchParams.get("pilih")))?.type
       ?? groups[0]?.type
       ?? null;
-  const activeItems = groups.find((group) => group.type === activeType)?.items ?? [];
+  const activeItems = urutPerKelasHariJam(
+    groups.find((group) => group.type === activeType)?.items ?? [],
+  );
   const selected = activeItems.find((k) => k.id === searchParams.get("pilih")) ?? activeItems[0] ?? null;
-  const preview = pratinjau(selected, slots);
-  const guruLabel = namaBukanId(catalog.guruName(preview.guruId), preview.guruId);
 
   const pilih = (id: string) => {
     const item = visible.find((row) => row.id === id);
@@ -134,6 +240,11 @@ function DaftarKonflikInner() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {isDemo ? (
+            <Button variant="outline" onClick={() => void tambahDemo()} disabled={demoLoading || !jadwalId}>
+              {demoLoading ? "Menyuntikkan…" : "Tambah konflik acak (demo)"}
+            </Button>
+          ) : null}
           <Button variant="outline" onClick={() => void runValidasi()} disabled={validating || !jadwalId}>
             {validating ? "Memeriksa…" : "Periksa ulang"}
           </Button>
@@ -212,21 +323,20 @@ function DaftarKonflikInner() {
 
           <GisPanel className="overflow-hidden p-0">
             <div className="border-b border-border px-4 py-4">
-              <h2 className="text-base font-semibold">{preview.judul}</h2>
+              <h2 className="text-base font-semibold">
+                {selected ? conflictTypeLabel(selected.tipe_konflik) : "Pratinjau jadwal"}
+              </h2>
               <p className="text-sm text-muted-foreground">
-                {selected?.deskripsi ?? guruLabel ?? "Pilih konflik untuk melihat jadwal yang terlibat."}
+                {selected?.deskripsi ?? "Pilih konflik untuk melihat jadwal yang terlibat."}
               </p>
             </div>
-            <ScheduleGrid
-              guruId={preview.guruId}
-              slots={preview.slots}
-              embedded
-              showFooter
-              showAllInCell={!preview.guruId}
-              onSlotClick={(_, conflicts) => {
-                if (conflicts[0]) pilih(conflicts[0].id);
-              }}
-            />
+            {selected ? (
+              <PratinjauKartu konflik={selected} slots={slots} />
+            ) : (
+              <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+                Pilih konflik untuk melihat jadwal yang terlibat.
+              </p>
+            )}
             <div className="flex justify-end border-t border-border px-4 py-3">
               {selected ? (
                 <Link

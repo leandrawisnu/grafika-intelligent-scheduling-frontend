@@ -74,14 +74,15 @@ function JadwalDetailInner() {
     const rows = jadwalKelasAktif.length > 0
       ? jadwalKelasAktif
       : (jadwal?.jadwal_kelas ?? []).filter((jk) => jk.is_active);
-    return rows
-      .map((jk) => {
-        const id = jk.kelas_id;
-        const nested = nestedKelas(jk);
-        const nama = nested?.nama ?? catalog.kelas.find((k) => k.id === id)?.nama ?? id;
-        return { id, nama };
-      })
-      .sort((a, b) => a.nama.localeCompare(b.nama, "id"));
+    const unik = new Map<string, { id: string; nama: string }>();
+    for (const jk of rows) {
+      const id = jk.kelas_id;
+      if (unik.has(id)) continue;
+      const nested = nestedKelas(jk);
+      const nama = nested?.nama ?? catalog.kelas.find((k) => k.id === id)?.nama ?? id;
+      unik.set(id, { id, nama });
+    }
+    return [...unik.values()].sort((a, b) => a.nama.localeCompare(b.nama, "id"));
   }, [jadwalKelasAktif, jadwal, catalog.kelas]);
 
   useEffect(() => {
@@ -128,8 +129,8 @@ function JadwalDetailInner() {
               title="Jadwal ini belum berisi slot"
               detail={
                 altJadwalId
-                  ? "Ada jadwal lain untuk semester yang sama yang sudah terisi dari seed. Buka jadwal tersebut, atau jalankan make seed-slots di backend."
-                  : "Jalankan make seed-slots di backend (setelah seed-ganjil), lalu refresh halaman."
+                  ? "Ada jadwal lain yang sudah terisi. Buka jadwal tersebut, atau isi lewat tab Plotting dan impor jadwal."
+                  : "Isi lewat tab Plotting atau impor jadwal, lalu muat ulang halaman."
               }
             >
               {altJadwalId ? (

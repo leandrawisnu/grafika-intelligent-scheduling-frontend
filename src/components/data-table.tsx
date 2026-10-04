@@ -57,6 +57,7 @@ interface DataTableProps {
   getSearchText?: (row: Record<string, unknown>) => string;
   onEdit?: (row: Record<string, unknown>) => void;
   onDelete?: (row: Record<string, unknown>) => void;
+  extraActions?: (row: Record<string, unknown>) => React.ReactNode;
   serverPaging?: ServerPaging;
 }
 
@@ -131,6 +132,7 @@ export function DataTable({
   getSearchText,
   onEdit,
   onDelete,
+  extraActions,
   serverPaging,
 }: DataTableProps) {
   const [query, setQuery] = useState("");
@@ -202,7 +204,8 @@ export function DataTable({
     }
   };
 
-  const colSpan = columns.length + (onEdit || onDelete ? 1 : 0);
+  const kolomAksi = Boolean(onEdit || onDelete || extraActions);
+  const colSpan = columns.length + (kolomAksi ? 1 : 0);
   const hasActiveSearch = debouncedQuery.trim().length > 0;
   const hasActiveFilter = Object.values(filterValues).some(Boolean);
 
@@ -315,7 +318,7 @@ export function DataTable({
                   {col.label}
                 </TableHead>
               ))}
-              {(onEdit || onDelete) && (
+              {kolomAksi && (
                 <TableHead className="h-11 w-[108px] px-4 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Aksi
                 </TableHead>
@@ -363,7 +366,7 @@ export function DataTable({
                           : String(row[col.key] ?? "—")}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete) && (
+                  {kolomAksi && (
                     <TableCell className="px-4 py-2.5">
                       <div className="flex gap-0.5">
                         {onEdit && (
@@ -388,6 +391,7 @@ export function DataTable({
                             <Trash2 className="size-4 text-destructive" />
                           </Button>
                         )}
+                        {extraActions && extraActions(row)}
                       </div>
                     </TableCell>
                   )}

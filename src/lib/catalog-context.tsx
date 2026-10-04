@@ -12,6 +12,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
+import { useJadwal } from "@/lib/jadwal-context";
 import type {
   Guru,
   Hari,
@@ -25,6 +26,7 @@ import type {
 type CatalogState = {
   loading: boolean;
   error: string | null;
+  semesterId: string | null;
   hari: Hari[];
   jam: JamPelajaran[];
   kelas: Kelas[];
@@ -49,7 +51,9 @@ function halamanMaster(pathname: string) {
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const sudahMinta = useRef(false);
+  const { jadwal } = useJadwal();
+  const semesterId = jadwal?.semester_id ?? null;
+  const semesterRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hari, setHari] = useState<Hari[]>([]);
@@ -61,17 +65,23 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const [jurusan, setJurusan] = useState<Jurusan[]>([]);
 
   const refresh = useCallback(async () => {
+    const semId = semesterRef.current;
     setLoading(true);
     setError(null);
     try {
-      const katalog = await api.getKatalog();
+      const [katalog, kelasRows, jurusanRows, ruanganRows] = await Promise.all([
+        api.getKatalog(semId ?? undefined),
+        semId ? api.getKelas(semId).catch(() => null) : Promise.resolve(null),
+        semId ? api.getJurusan(semId).catch(() => null) : Promise.resolve(null),
+        semId ? api.getRuangan(semId).catch(() => null) : Promise.resolve(null),
+      ]);
       setHari([...katalog.hari].sort((a, b) => a.urutan_hari - b.urutan_hari));
       setJam([...katalog.jam_pelajaran].sort((a, b) => a.jam_ke - b.jam_ke));
-      setKelas(katalog.kelas);
+      setKelas(kelasRows ?? katalog.kelas);
       setGuru(katalog.guru);
       setMataPelajaran(katalog.mata_pelajaran);
-      setRuangan(katalog.ruangan);
-      setJurusan(katalog.jurusan);
+      setRuangan(ruanganRows ?? katalog.ruangan);
+      setJurusan(jurusanRows ?? katalog.jurusan);
     } catch {
       setError("Gagal memuat katalog. Cek backend lalu muat ulang halaman.");
     }
@@ -79,14 +89,16 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    semesterRef.current = semesterId;
+  }, [semesterId]);
+
+  useEffect(() => {
     if (halamanMaster(pathname)) {
       setLoading(false);
       return;
     }
-    if (sudahMinta.current) return;
-    sudahMinta.current = true;
     void refresh();
-  }, [pathname, refresh]);
+  }, [pathname, semesterId, refresh]);
 
   const maps = useMemo(() => {
     const guruById = new Map(guru.map((g) => [g.id, g]));
@@ -102,6 +114,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     () => ({
       loading,
       error,
+      semesterId,
       hari,
       jam,
       kelas,
@@ -121,7 +134,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         return `ke-${row.jam_ke} · ${row.waktu_mulai}`;
       },
     }),
-    [loading, error, hari, jam, kelas, guru, mataPelajaran, ruangan, jurusan, refresh, maps]
+    [loading, error, semesterId, hari, jam, kelas, guru, mataPelajaran, ruangan, jurusan, refresh, maps]
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

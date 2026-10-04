@@ -20,6 +20,8 @@ export interface Jurusan {
   id: string;
   kode: string;
   nama: string;
+  semester_id: string;
+  semester?: { nama: string };
 }
 
 export interface Guru {
@@ -54,6 +56,8 @@ export interface Ruangan {
   kapasitas: number;
   tipe_ruangan: string;
   aktif: boolean;
+  semester_id: string;
+  semester?: { nama: string };
 }
 
 export interface Hari {
@@ -61,6 +65,15 @@ export interface Hari {
   nama: string;
   urutan_hari: number;
   akhir_pekan: boolean;
+}
+
+export interface HariLiburGuru {
+  id: string;
+  guru_id: string;
+  hari_id: string;
+  semester_id: string;
+  alasan: string;
+  hari?: Hari;
 }
 
 export interface JamPelajaran {
@@ -96,7 +109,7 @@ export interface JadwalSemester {
   punya_kelas_aktif?: boolean;
   jurusan?: JadwalSemesterJurusan[];
   jadwal_kelas?: JadwalKelas[];
-  semester?: { nama: string; tahun_ajaran_id: string };
+  semester?: { nama: string; tahun_ajaran_id: string; tahun_ajaran?: { nama: string } };
 }
 
 export interface JadwalSemesterJurusan {
@@ -135,6 +148,23 @@ export interface SlotJadwal {
   jam_pelajaran?: { waktu_mulai: string; waktu_selesai: string };
   ruangan?: { nama: string };
   guru?: { nama_lengkap: string };
+}
+
+export interface Plotting {
+  id: string;
+  semester_id: string;
+  kelas_id: string;
+  hari_id: string;
+  jam_pelajaran_id: string;
+  mata_pelajaran_id: string;
+  guru_id: string;
+  ruangan_id: string | null;
+  kelas?: { nama: string };
+  hari?: { nama: string };
+  jam_pelajaran?: { jam_ke: number; waktu_mulai: string; waktu_selesai: string };
+  mata_pelajaran?: { nama: string };
+  guru?: { nama_lengkap: string };
+  ruangan?: { nama: string };
 }
 
 export interface BarisImpor {
