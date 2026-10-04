@@ -78,7 +78,7 @@ export default function GuruJadwalPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select
-            value={activeJadwalId ?? undefined}
+            value={activeJadwalId ?? null}
             onValueChange={(v) => v && void loadJadwal(v)}
             disabled={jadwalList.length === 0}
           >

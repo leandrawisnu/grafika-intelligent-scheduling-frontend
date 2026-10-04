@@ -98,7 +98,7 @@ export function KelasGridFilter({
       <div className="min-w-[12rem] flex-1 space-y-1 sm:max-w-xs">
         <p className="text-xs font-medium text-muted-foreground">Kelas</p>
         <Select
-          value={value || (requireSelection ? undefined : ALL)}
+          value={value || (requireSelection ? null : ALL)}
           onValueChange={(v) => onChange(v === ALL ? "" : v ?? "")}
         >
           <SelectTrigger size="sm" className="w-full min-w-[12rem]">
