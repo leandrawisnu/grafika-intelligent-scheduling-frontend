@@ -32,7 +32,7 @@ async function teruskan(req: NextRequest, path: string[]) {
   const responseType = go.headers.get("content-type");
   if (responseType) out.set("content-type", responseType);
   out.set("cache-control", "no-store");
-  const res = new NextResponse(await go.arrayBuffer(), { status: go.status, headers: out });
+  const res = new NextResponse(go.body, { status: go.status, headers: out });
   if (go.status === 401) {
     res.cookies.set(sessionCookieName(secure), "", {
       ...sessionCookieOptions(secure),
