@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Grafika Intelligent Scheduling",
   description: "Platform manajemen jadwal sekolah berbasis AI",
+  icons: { icon: "/Logo.jpg" },
 };
 
 export default function RootLayout({
