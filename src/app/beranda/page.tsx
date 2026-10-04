@@ -70,7 +70,6 @@ export default function Dashboard() {
   const pintasan = [
     { href: jsHref, label: "Grid jadwal" },
     { href: `${jsHref}?tab=plotting`, label: "Plotting guru" },
-    { href: "/ai/tanya", label: "Asisten AI" },
   ];
 
   return (

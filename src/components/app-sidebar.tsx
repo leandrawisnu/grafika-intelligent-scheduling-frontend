@@ -17,7 +17,6 @@ import {
   MoreHorizontal,
   PanelLeft,
   Settings,
-  Sparkles,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -291,8 +290,6 @@ function KurikulumSidebarNav() {
   const jadwalActive =
     (pathname === "/jadwal" || pathname.startsWith("/jadwal/")) && !konflikActive;
 
-  const tanyaActive = pathname.startsWith("/ai/tanya");
-
   return (
     <>
       <SidebarGroup className="py-1">
@@ -316,12 +313,6 @@ function KurikulumSidebarNav() {
               label="Conflict Resolver"
               icon={GitMergeConflict}
               active={konflikActive}
-            />
-            <WorkspaceNavItem
-              href="/ai/tanya"
-              label="Asisten AI"
-              icon={Sparkles}
-              active={tanyaActive}
             />
           </SidebarMenu>
         </SidebarGroupContent>
