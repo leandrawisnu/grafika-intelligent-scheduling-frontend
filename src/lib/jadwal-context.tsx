@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import { konflikToListItem, normalisasiKonflik, type ConflictListItem } from "@/lib/conflict-display";
 import { jadwalSemesterLabel } from "@/lib/jadwal-labels";
-import { jadwalKonflikHref } from "@/lib/navigation";
+import { jadwalKonflikHref, ruteAplikasi } from "@/lib/navigation";
 import type { JadwalKelas, JadwalSemester, Konflik, KonflikPerTipe, SlotJadwal } from "@/lib/types";
 import type { WorkflowStep } from "@/lib/prototype-types";
 
@@ -111,6 +111,7 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
+  const masukAplikasi = ruteAplikasi(pathname);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [jadwalList, setJadwalList] = useState<JadwalSemester[]>([]);
@@ -242,9 +243,12 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!masukAplikasi) return;
+    let batal = false;
     void (async () => {
       setLoading(true);
       const list = await refreshList();
+      if (batal) return;
       const stored =
         typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       const pick = pickJadwalId(list, stored);
@@ -261,8 +265,10 @@ export function JadwalProvider({ children }: { children: ReactNode }) {
       }
       setLoading(false);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- bootstrap once
-  }, []);
+    return () => {
+      batal = true;
+    };
+  }, [masukAplikasi, refreshList, setActiveJadwalId, loadJadwal]);
 
   useEffect(() => {
     if (!activeJadwalId || !ruteButuhDetailJadwal(pathname)) return;

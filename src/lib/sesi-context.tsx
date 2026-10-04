@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { ruteAplikasi } from "@/lib/navigation";
 
 export type SesiAkun = {
   id: string;
@@ -13,9 +15,12 @@ export type SesiAkun = {
 const SesiContext = createContext<SesiAkun | null>(null);
 
 export function SesiProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const masukAplikasi = ruteAplikasi(pathname);
   const [sesi, setSesi] = useState<SesiAkun | null>(null);
 
   useEffect(() => {
+    if (!masukAplikasi) return;
     let batal = false;
     fetch("/api/auth/sesi", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -28,7 +33,7 @@ export function SesiProvider({ children }: { children: React.ReactNode }) {
     return () => {
       batal = true;
     };
-  }, []);
+  }, [masukAplikasi]);
 
   return <SesiContext.Provider value={sesi}>{children}</SesiContext.Provider>;
 }
