@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ruteAplikasi } from "@/lib/navigation";
 
 const SEGMENT_LABELS: Record<string, string> = {
   beranda: "Beranda",
@@ -126,7 +127,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { semesterLabel } = useJadwal();
 
-  if (pathname === "/" || pathname === "/style-guide" || pathname === "/login" || pathname.startsWith("/login/")) {
+  if (!ruteAplikasi(pathname)) {
     return <>{children}</>;
   }
 
