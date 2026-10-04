@@ -8,6 +8,7 @@ export default function MataPelajaranPage() {
     <CRUDPage
       title="Mata Pelajaran"
       description="Kelola data mata pelajaran"
+      aiImpor
       fields={[
         { key: "kode", label: "Kode" },
         { key: "nama", label: "Nama Mata Pelajaran" },

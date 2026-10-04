@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImporJadwalDialog } from "@/components/impor-jadwal-dialog";
+import { AiImporDialog } from "@/components/ai-impor-dialog";
 import { ScheduleGrid } from "@/components/schedule-grid";
 import { PlottingPanel } from "@/components/plotting-panel";
 import { AiInsightBar } from "@/components/ai-insight-bar";
@@ -60,6 +61,7 @@ function JadwalDetailInner() {
   };
 
   const [altJadwalId, setAltJadwalId] = useState<string | null>(null);
+  const [modeCepatOpen, setModeCepatOpen] = useState(false);
 
   useEffect(() => {
     if (slots.length > 0 || jadwalList.length < 2) {
@@ -99,7 +101,15 @@ function JadwalDetailInner() {
           <h1 className="gis-page-title">{semesterLabel}</h1>
           <p className="mt-1 text-sm text-muted-foreground">Senin – Jumat · per kelas</p>
         </div>
-        <ImporJadwalDialog jadwalId={jadwalId} />
+        <div className="flex flex-wrap items-center gap-2">
+          <ImporJadwalDialog
+            jadwalId={jadwalId}
+            open={modeCepatOpen}
+            onOpenChange={setModeCepatOpen}
+            hideTrigger
+          />
+          <AiImporDialog jadwalId={jadwalId} onModeCepat={() => setModeCepatOpen(true)} />
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>

@@ -73,6 +73,7 @@ export default function KelasPage() {
       key={semesterAktifId || "semua"}
       title="Kelas"
       description="Kelola data kelas"
+      aiImpor
       fields={fields}
       fetchData={fetchKelas}
       onCreate={(d) => {

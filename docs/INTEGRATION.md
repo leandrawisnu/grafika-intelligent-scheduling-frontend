@@ -11,8 +11,16 @@
 | Jadwal semester, slot, plotting, publikasi | API jadwal |
 | Konflik | API `POST .../validasi` + `GET .../konflik` (rules lokal) |
 | Prediksi / resolve / tanya NL | API → ML (opsional; UI fallback jika 500) |
+| Impor manual cepat (PDF/xlsx) | API `POST .../impor/pratinjau` + `.../impor` (fallback) |
+| **AI Import dokumen (semua format)** | API `POST /dokumen-impor` → ML `POST /ingest/parse` (LlamaParse) + `POST /ingest/petakan` (LLM) → `POST /dokumen-impor/:id/terapkan` |
 | Peran demo guru/siswa | UI state (auth nanti) |
 | Style guide | Mock demo |
+
+### AI Import dokumen
+
+- Butuh `LLAMA_CLOUD_API_KEY` + `OPENROUTER_API_KEY` di `.env` layanan ML; tanpa itu job gagal dengan pesan jelas dan UI menawarkan **mode cepat** (alur lama).
+- Alur: unggah (`POST /dokumen-impor`, multipart) → polling `GET /dokumen-impor/:id` (tahap `parsing` → `memetakan` → `siap`) → tinjau/edit di dialog → `POST /dokumen-impor/:id/terapkan` (commit transaksional + auto deteksi konflik).
+- `POST /dokumen-impor/:id/ulangi` mengulang analisis tanpa parse ulang bila teks hasil parsing sudah tersimpan.
 
 ## Urutan isi DB dev
 

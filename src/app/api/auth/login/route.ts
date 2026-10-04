@@ -8,9 +8,19 @@ import {
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  // Forward the chain so Go's login limiter sees the real
+  // client IP (last X-Forwarded-For entry) instead of the
+  // Next.js container IP.
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    headers["X-Forwarded-For"] = xff;
+  }
   const go = await fetch(`${apiOrigin()}/api/v1/auth/masuk`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body,
     cache: "no-store",
   });

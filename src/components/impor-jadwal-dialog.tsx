@@ -115,7 +115,7 @@ function PilihNilai({
 }) {
   const label = options.find((o) => o.value === value)?.label ?? placeholder;
   return (
-    <Select value={value || undefined} onValueChange={(v) => onValueChange(v ?? "")}>
+    <Select value={value || null} onValueChange={(v) => onValueChange(v ?? "")}>
       <SelectTrigger className="h-8 w-full min-w-[8rem] max-w-[12rem]">
         <span className="min-w-0 flex-1 truncate text-left text-sm">{label}</span>
       </SelectTrigger>
@@ -136,10 +136,21 @@ function statusTeks(status: StatusImpor) {
   return "Perlu pilihan";
 }
 
-export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
+export function ImporJadwalDialog({
+  jadwalId,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
+}: {
+  jadwalId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}) {
   const catalog = useCatalog();
   const { jadwal, loadJadwal, loadSlotsFor } = useJadwal();
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
   const [berkas, setBerkas] = useState<File | null>(null);
   const [baris, setBaris] = useState<BarisEdit[]>([]);
   const [bentrok, setBentrok] = useState<Set<string>>(new Set());
@@ -187,7 +198,8 @@ export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
   };
 
   const ubahBuka = (buka: boolean) => {
-    setOpen(buka);
+    if (openProp === undefined) setOpenInternal(buka);
+    onOpenChange?.(buka);
     if (!buka) reset();
   };
 
@@ -269,10 +281,12 @@ export function ImporJadwalDialog({ jadwalId }: { jadwalId: string }) {
 
   return (
     <>
-      <Button type="button" variant="outline" onClick={() => ubahBuka(true)}>
-        <Upload className="mr-1.5 size-4" />
-        Unggah jadwal
-      </Button>
+      {hideTrigger ? null : (
+        <Button type="button" variant="outline" onClick={() => ubahBuka(true)}>
+          <Upload className="mr-1.5 size-4" />
+          Unggah jadwal
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={ubahBuka}>
         <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden sm:max-w-5xl">
           <DialogHeader>
